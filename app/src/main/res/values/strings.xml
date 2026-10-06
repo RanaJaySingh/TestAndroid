@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PiPlanner</string>
+
+    <string name="opening_split_title">Assign your opening balance</string>
+    <string name="opening_split_title_readonly">Opening balance</string>
+    <string name="opening_split_subtitle">Every rupee goes to a goal. Splits must total 100%.</string>
+    <string name="opening_balance_label">Opening balance</string>
+    <string name="share_label">Share</string>
+    <string name="lock_this_split">Lock this split</string>
+    <string name="lock_this_split_confirm_title">Lock this split?</string>
+    <string name="lock_this_split_confirm_body">Locked amounts never change. This creates your Opening balance History entry.</string>
+    <string name="lock_failed_title">Couldn’t lock split</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+
+    <string name="goals_tab_title">Goals</string>
+    <string name="goals_tab_placeholder_body">Your opening balance is locked. Full Goals tab arrives in PIP-46.</string>
+</resources>
