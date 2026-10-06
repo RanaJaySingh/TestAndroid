@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: [main, "PIP-34-*", "cursor/**"]
+    branches: [main, "PIP-*", "cursor/**"]
   pull_request:
     branches: [main]
 

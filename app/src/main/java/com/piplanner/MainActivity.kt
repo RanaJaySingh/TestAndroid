@@ -7,11 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.piplanner.ui.navigation.PiPlannerNavHost
 import com.piplanner.ui.theme.PiPlannerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Compose host only — Welcome / Accounts / other screens land in later tickets.
+ * Compose host. Until earlier setup tickets land, starts at Opening split (PIP-44).
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -21,7 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PiPlannerTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    // UI screens are out of scope for PIP-34.
+                    PiPlannerNavHost()
                 }
             }
         }
