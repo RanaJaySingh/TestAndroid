@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PiPlanner</string>
+    <string name="tagline">Every Rupee Has a Plan.</string>
+    <string name="powered_by_grok">Powered by Grok</string>
+    
+    <!-- Navigation -->
+    <string name="nav_goals">Goals</string>
+    <string name="nav_history">History</string>
+    <string name="nav_ask">Ask</string>
+    <string name="nav_settings">Settings</string>
+    
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Every Rupee Has a Plan.</string>
+    <string name="welcome_subtitle">Every credit to savings gets a goal before it can be spent.</string>
+    <string name="how_it_works">How it works</string>
+    <string name="set_up_savings">Set up savings</string>
+    
+    <!-- How it works steps -->
+    <string name="step_1_title">Pick a savings account</string>
+    <string name="step_1_desc">Pick a savings account that you will use exclusively for goals.</string>
+    <string name="step_2_title">Set your goals</string>
+    <string name="step_2_desc">Tell us your goals and we'll calculate how much you need to save.</string>
+    <string name="step_3_title">Split every new credit</string>
+    <string name="step_3_desc">Every credit to that savings account will be split across your goals.</string>
+    
+    <!-- Accounts Screen -->
+    <string name="accounts_title">Accounts</string>
+    <string name="your_accounts">Your accounts</string>
+    <string name="pick_dedicated_savings">Pick one for dedicated savings.</string>
+    <string name="dedicated_savings">Dedicated savings</string>
+    <string name="savings_account">Savings</string>
+    <string name="spending_account">Spending</string>
+    <string name="everyday_spend_note">Everyday spend. Not split across goals.</string>
+    
+    <!-- Consent Screen -->
+    <string name="consent_title">Allow PiPlanner to check this balance?</string>
+    <string name="reads_only_balance">Reads only this balance</string>
+    <string name="stores_last_balance">Stores the last balance to find what is new</string>
+    <string name="never_accesses_transactions">Never accesses transactions</string>
+    <string name="never_transfers">Never makes transfers</string>
+    <string name="change_in_settings">Change it any time in Settings</string>
+    <string name="yes_update_auto">Yes, update automatically</string>
+    <string name="no_update_manual">No, I\'ll update it myself</string>
+    
+    <!-- Balance Screen -->
+    <string name="balance_title">Balance</string>
+    <string name="balance_read_auto">Balance read automatically</string>
+    <string name="balance_fetched">Balance fetched</string>
+    <string name="opening_balance">Opening balance</string>
+    <string name="how_much_in_account">How much is in this account?</string>
+    <string name="update_balance">Update balance</string>
+    <string name="manually">Manually</string>
+    <string name="balance_sync">Balance sync</string>
+    <string name="check_via_upi">Check via your UPI PIN</string>
+    
+    <!-- Goal Setup -->
+    <string name="plan_your_goals">Plan your goals</string>
+    <string name="what_planning_for">What are you planning for?</string>
+    <string name="goal_prompt_hint">For example: ₹1,50,000 for a holiday by May 2025, plus ₹60,000 for a laptop by December</string>
+    <string name="use_form">Use a form</string>
+    <string name="groks_proposal">Grok\'s proposal</string>
+    <string name="edit">Edit</string>
+    <string name="confirm">Confirm</string>
+    
+    <!-- Goal Form -->
+    <string name="goal_name">Goal name</string>
+    <string name="target_amount">Target amount</string>
+    <string name="target_with_inflation">Target with inflation</string>
+    <string name="start_date">Start date</string>
+    <string name="end_date">End date</string>
+    <string name="inflation_rate">Inflation rate</string>
+    <string name="share_of_credits">Share of credits</string>
+    <string name="saved_so_far">Saved so far</string>
+    <string name="needs_per_month">Needs/month</string>
+    <string name="save_goal">Save goal</string>
+    
+    <!-- Opening Split -->
+    <string name="opening_split">Opening split</string>
+    <string name="split_opening_balance">Split your opening balance across goals</string>
+    <string name="lock_this_split">Lock this split</string>
+    <string name="total">Total</string>
+    
+    <!-- Goals Home -->
+    <string name="good_morning">Good morning</string>
+    <string name="good_afternoon">Good afternoon</string>
+    <string name="good_evening">Good evening</string>
+    <string name="your_goals">Your Goals</string>
+    <string name="on_track">On track</string>
+    <string name="behind">Behind</string>
+    <string name="sync">Sync</string>
+    <string name="new_goal">New goal</string>
+    <string name="transfer">Transfer</string>
+    <string name="last_synced">Last synced</string>
+    <string name="of_credits">of credits</string>
+    
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="new_credit">New credit</string>
+    <string name="custom_split">Custom split</string>
+    <string name="withdrawal">Withdrawal</string>
+    <string name="goal_deleted">Goal deleted</string>
+    
+    <!-- Ask -->
+    <string name="ask_title">Ask</string>
+    <string name="ask_grok">Ask Grok</string>
+    <string name="ask_hint">What would you like to do?</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="linked_accounts">Linked accounts</string>
+    <string name="automatic_balance_updates">Automatic balance updates</string>
+    <string name="reset_demo">Reset demo</string>
+    
+    <!-- Actions -->
+    <string name="continue_btn">Continue</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="done">Done</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    
+    <!-- Inflation Popup -->
+    <string name="inflation_title">Inflation</string>
+    <string name="inflation_explanation">At 7% inflation, your ₹1,50,000 in 2025 will need to be ₹1,60,500 to have the same purchasing power.</string>
+    
+    <!-- UPI PIN -->
+    <string name="check_balance">Check balance</string>
+    <string name="enter_upi_pin">Enter your UPI PIN</string>
+    <string name="demo_pin_note">Demo PIN: any 4 digits</string>
+    
+    <!-- Step indicators -->
+    <string name="step_of">Step %1$d of %2$d</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="navy_primary">#002E6E</color>
+    <color name="navy_dark">#001F4D</color>
+    <color name="navy_light">#1A4A8A</color>
+    
+    <!-- Background -->
+    <color name="background">#F4F6FA</color>
+    <color name="surface">#FFFFFF</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#666666</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    
+    <!-- Status Colors -->
+    <color name="status_green">#22C55E</color>
+    <color name="status_amber">#F59E0B</color>
+    <color name="status_red">#EF4444</color>
+    
+    <!-- Other -->
+    <color name="divider">#E5E7EB</color>
+    <color name="card_border">#E0E4EB</color>
+</resources>
