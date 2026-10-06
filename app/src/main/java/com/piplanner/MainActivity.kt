@@ -12,7 +12,7 @@ import com.piplanner.ui.theme.PiPlannerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Compose host. Until earlier setup tickets land, starts at Opening split (PIP-44).
+ * Compose host. Starts at Accounts (PIP-38); Opening split (PIP-44) remains in the nav graph.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
