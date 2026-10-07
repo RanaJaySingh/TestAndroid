@@ -1,9 +1,6 @@
 package com.piplanner.data.local
 
-import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.preferencesDataStoreFile
-import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.piplanner.data.model.Account
 import com.piplanner.data.model.AppState
@@ -11,37 +8,53 @@ import com.piplanner.data.model.Goal
 import com.piplanner.data.model.HistoryEntry
 import com.piplanner.data.model.HistoryEntryType
 import com.piplanner.data.model.StandingSplit
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import org.junit.rules.TemporaryFolder
+import java.io.File
 
+/**
+ * Persistence reset tests run on the JVM with a temp-file DataStore.
+ *
+ * Intentionally avoids Robolectric / ApplicationProvider so CI cannot flake on
+ * Robolectric's runtime MavenArtifactFetcher downloads (FileNotFoundException).
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [26])
 class PersistenceServiceResetTest {
 
-    private lateinit var persistenceService: PersistenceService
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     private val testDispatcher = UnconfinedTestDispatcher()
+    private lateinit var dataStoreScope: CoroutineScope
+    private lateinit var persistenceService: PersistenceService
 
     @Before
     fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        dataStoreScope = CoroutineScope(testDispatcher + SupervisorJob())
+        val dataStoreFile = File(temporaryFolder.newFolder(), "piplanner_demo_test.preferences_pb")
         val dataStore = PreferenceDataStoreFactory.create(
-            scope = kotlinx.coroutines.CoroutineScope(testDispatcher),
-            produceFile = {
-                context.preferencesDataStoreFile("piplanner_demo_test_${System.nanoTime()}")
-            },
+            scope = dataStoreScope,
+            produceFile = { dataStoreFile },
         )
         persistenceService = DataStorePersistenceService(
             dataStore = dataStore,
             serializer = AppStateJsonSerializer(),
             ioDispatcher = testDispatcher,
         )
+    }
+
+    @After
+    fun tearDown() {
+        dataStoreScope.cancel()
     }
 
     @Test

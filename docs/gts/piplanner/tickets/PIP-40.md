@@ -41,6 +41,10 @@ Consent Yes/No + balance entry under `ui/setup` with `ConsentViewModel`, mock `B
 - Design artifact copy was inferred from PRD R3/R4 + iOS PIP-39 when the Claude artifact page did not expose frame text.
 - Copy and behaviour aligned with merged iOS PIP-39.
 
+## CI harden (same PR)
+
+`PersistenceServiceResetTest` no longer uses Robolectric / `ApplicationProvider`. It uses a JVM temp-file DataStore so GitHub Actions cannot flake on Robolectric `MavenArtifactFetcher` network misses. Robolectric and `androidx.test.core` test deps removed as unused.
+
 ## Out of scope
 
 Real UPI / bank integration; Goal chat / form changes; Opening split logic beyond receiving a resolved balance.
