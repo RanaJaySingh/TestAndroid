@@ -37,6 +37,7 @@ fun GoalsTab(
     onOpenSettings: () -> Unit,
     onOpenCreditEntry: (String) -> Unit,
     onOpenWithdrawalStub: () -> Unit,
+    onOpenStandingSplit: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -77,6 +78,7 @@ fun GoalsTab(
         onBalanceAction = viewModel::tapBalanceAction,
         onGoalClick = { goalId -> viewModel.selectGoal(goalId) },
         onSettingsClick = viewModel::openSettings,
+        onStandingSplitClick = onOpenStandingSplit,
         onDismissError = viewModel::clearError,
         onDismissSync = viewModel::dismissSyncSheet,
         onConfirmSync = viewModel::performSync,
@@ -98,6 +100,7 @@ fun GoalsTabContent(
     onBalanceAction: () -> Unit,
     onGoalClick: (String) -> Unit,
     onSettingsClick: () -> Unit,
+    onStandingSplitClick: () -> Unit = {},
     onDismissError: () -> Unit,
     onDismissSync: () -> Unit,
     onConfirmSync: () -> Unit,
@@ -187,6 +190,14 @@ fun GoalsTabContent(
                             contentDescription = "Your goals section"
                         },
                     )
+                    TextButton(
+                        onClick = onStandingSplitClick,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Open standing split"
+                        },
+                    ) {
+                        Text(stringResource(R.string.standing_split_title))
+                    }
                     uiState.goals.forEach { goal ->
                         GoalCard(
                             name = goal.name,

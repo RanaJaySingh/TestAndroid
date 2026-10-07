@@ -30,6 +30,7 @@ fun MainTabsScreen(
     onOpenSettings: () -> Unit,
     onOpenCreditEntry: (String) -> Unit,
     onOpenWithdrawalStub: () -> Unit,
+    onOpenStandingSplit: () -> Unit = {},
     goalsViewModel: GoalsViewModel = hiltViewModel(),
 ) {
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -75,6 +76,7 @@ fun MainTabsScreen(
                     onOpenSettings = onOpenSettings,
                     onOpenCreditEntry = onOpenCreditEntry,
                     onOpenWithdrawalStub = onOpenWithdrawalStub,
+                    onOpenStandingSplit = onOpenStandingSplit,
                 )
                 1 -> HistoryTabPlaceholder()
                 else -> AskTabPlaceholder()
