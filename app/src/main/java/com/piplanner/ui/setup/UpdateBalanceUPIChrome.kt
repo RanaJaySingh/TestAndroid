@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.piplanner.ui.theme.PiIcons
 import com.piplanner.ui.theme.PiPlannerColors
 import com.piplanner.ui.theme.PiPlannerDimens
 import com.piplanner.ui.theme.PiPlannerTheme
@@ -257,11 +257,11 @@ fun UPIMockPad(
     }
 }
 
-/** Convenience leading icons for Update balance choice rows (Material core). */
+/** Convenience leading icons for Update balance choice rows (PIP-72 PiIcons + Edit). */
 object UpdateBalanceChoiceIcons {
     val Manually: ImageVector get() = Icons.Filled.Edit
-    /** Sync metaphor via Material core Refresh (Sync lives in icons-extended). */
-    val BalanceSync: ImageVector get() = Icons.Filled.Refresh
+    /** Sync metaphor from shared PIP-72 catalog. */
+    val BalanceSync: ImageVector get() = PiIcons.syncFilled
 }
 
 @Preview(showBackground = true, name = "Choice rows")
