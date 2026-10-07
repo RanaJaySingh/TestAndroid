@@ -320,6 +320,15 @@ fun PiPlannerNavHost(
                 onOpenHistoryDetail = { entryId ->
                     navController.navigate(PiPlannerRoutes.historyDetail(entryId))
                 },
+                onOpenTransferPrefill = { prefill ->
+                    navController.navigate(
+                        PiPlannerRoutes.transfer(
+                            fromGoalId = prefill.fromGoalId,
+                            toGoalId = prefill.toGoalId,
+                            amountPaisa = prefill.amountPaisa,
+                        ),
+                    )
+                },
             )
         }
         composable(PiPlannerRoutes.STANDING_SPLIT) {

@@ -16,7 +16,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.piplanner.domain.GoalsTabService
-import com.piplanner.ui.ask.AskTabPlaceholder
+import com.piplanner.domain.TransferAskPrefill
+import com.piplanner.ui.ask.AskTab
 import com.piplanner.ui.goals.GoalsTab
 import com.piplanner.ui.goals.GoalsViewModel
 import com.piplanner.ui.history.HistoryTab
@@ -35,6 +36,7 @@ fun MainTabsScreen(
     onOpenTransfer: () -> Unit = {},
     onOpenHistoryOpening: (String) -> Unit = {},
     onOpenHistoryDetail: (String) -> Unit = {},
+    onOpenTransferPrefill: (TransferAskPrefill) -> Unit = {},
     goalsViewModel: GoalsViewModel = hiltViewModel(),
     historyViewModel: HistoryViewModel = hiltViewModel(),
 ) {
@@ -90,7 +92,10 @@ fun MainTabsScreen(
                     onOpenOpeningEntry = onOpenHistoryOpening,
                     onOpenLockedDetail = onOpenHistoryDetail,
                 )
-                else -> AskTabPlaceholder()
+                else -> AskTab(
+                    onOpenTransfer = onOpenTransferPrefill,
+                    onOpenStandingSplit = onOpenStandingSplit,
+                )
             }
         }
     }
