@@ -210,6 +210,7 @@
     <string name="use_a_form">Use a form</string>
     <string name="send">Send</string>
     <string name="suggested_goals">Suggested goals</string>
+    <string name="grok_proposal_title">Grok\'s proposal</string>
     <string name="edit">Edit</string>
     <string name="confirm">Confirm</string>
     <string name="grok_unavailable_title">Grok unavailable</string>
@@ -220,6 +221,7 @@
 
     <string name="goal_form_title">Define a goal</string>
     <string name="goal_form_subtitle">Name, target, dates, and share of new credits. Inflation defaults to 7%.</string>
+    <string name="goal_form_incomplete">Enter a name, target above ₹0, and an end date after start.</string>
     <string name="goal_name_label">Name</string>
     <string name="goal_name_placeholder">e.g. Car</string>
     <string name="goal_target_label">Target</string>
@@ -237,4 +239,7 @@
     <string name="inflation_subtitle">Used to estimate an inflation-adjusted target. Default is 7%.</string>
     <string name="inflation_rate_label">Rate</string>
     <string name="inflation_adjusted_target">Inflation-adjusted target</string>
+    <string name="inflation_adjusted_target_short">Adjusted target</string>
+    <string name="inflation_live_hint">Updates live as you change the rate.</string>
+    <string name="use_this_rate">Use this rate</string>
 </resources>

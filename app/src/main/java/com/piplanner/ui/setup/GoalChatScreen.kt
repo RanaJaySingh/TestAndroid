@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -15,12 +14,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,9 +33,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.data.model.Goal
 import com.piplanner.domain.GoalProposal
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.ProposalCard
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTypography
 
 /**
  * Goal chat — design frames 5 / 5a / 5b / 5c, with form hand-off (6) and goals-defined Continue.
+ * Visual parity (PIP-80): tokens + ProposalCard / PiCard / PrimaryCta / SecondaryCta only.
  */
 @Composable
 fun GoalChatScreen(
@@ -106,26 +111,35 @@ fun GoalChatContent(
     onShareChange: (String, Int) -> Unit,
     onContinue: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(
+                    horizontal = PiPlannerDimens.Space16,
+                    vertical = PiPlannerDimens.Space8,
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.goal_chat_title),
-                style = MaterialTheme.typography.titleLarge,
+                style = PiPlannerTypography.title,
                 fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnBackground,
             )
             if (uiState.phase != GoalChatPhase.Unavailable) {
-                TextButton(
+                SecondaryCta(
+                    text = stringResource(R.string.use_a_form),
                     onClick = onUseForm,
-                    modifier = Modifier.semantics { contentDescription = "Use a form" },
-                ) {
-                    Text(stringResource(R.string.use_a_form))
-                }
+                    fillMaxWidth = false,
+                    style = SecondaryCtaStyle.Text,
+                    contentDescription = "Use a form",
+                )
             }
         }
 
@@ -133,15 +147,15 @@ fun GoalChatContent(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(PiPlannerDimens.Space16),
+            verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
         ) {
             uiState.messages.forEach { message ->
                 MessageBubble(message)
             }
 
             if (uiState.phase == GoalChatPhase.Proposal) {
-                ProposalCard(
+                GoalProposalCard(
                     proposals = uiState.proposals,
                     checkedByLabel = uiState.checkedByLabel,
                     formatInr = formatInr,
@@ -192,18 +206,23 @@ private fun MessageBubble(message: GoalChatMessage) {
     ) {
         Text(
             text = message.text,
-            style = MaterialTheme.typography.bodyLarge,
+            style = PiPlannerTypography.body,
+            color = if (isUser) {
+                PiPlannerColors.OnChipLightBlue
+            } else {
+                PiPlannerColors.OnSurface
+            },
             modifier = Modifier
                 .widthIn(max = 320.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(PiPlannerDimens.RadiusCard))
                 .background(
                     if (isUser) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        PiPlannerColors.ChipLightBlue
                     } else {
-                        MaterialTheme.colorScheme.surfaceVariant
+                        PiPlannerColors.SurfaceCard
                     },
                 )
-                .padding(12.dp)
+                .padding(PiPlannerDimens.Space12)
                 .semantics {
                     contentDescription = if (isUser) {
                         "You: ${message.text}"
@@ -215,8 +234,9 @@ private fun MessageBubble(message: GoalChatMessage) {
     }
 }
 
+/** Shared ProposalCard shell — title / body / checked-by / Edit·Confirm (PRD R9). */
 @Composable
-private fun ProposalCard(
+private fun GoalProposalCard(
     proposals: List<GoalProposal>,
     checkedByLabel: String,
     formatInr: (Long) -> String,
@@ -224,35 +244,30 @@ private fun ProposalCard(
     onEdit: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ProposalCard(
+        title = stringResource(R.string.grok_proposal_title),
+        onEdit = onEdit,
+        onConfirm = onConfirm,
+        checkedByLabel = checkedByLabel,
+        contentDescription = "Proposal card",
     ) {
-        Text(
-            text = stringResource(R.string.suggested_goals),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
         proposals.forEach { proposal ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8 / 2)) {
                     Text(
                         text = proposal.name,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = PiPlannerTypography.body,
                         fontWeight = FontWeight.SemiBold,
+                        color = PiPlannerColors.OnSurface,
                     )
                     Text(
                         text = formatInr(proposal.suggestedTarget ?: 0L),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = PiPlannerTypography.caption,
+                        color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                     )
                 }
                 Text(
@@ -260,29 +275,10 @@ private fun ProposalCard(
                         R.string.percent_value,
                         displayPercent(proposal.sharePercentage),
                     ),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = PiPlannerTypography.title,
                     fontWeight = FontWeight.SemiBold,
+                    color = PiPlannerColors.NavyPrimary,
                 )
-            }
-        }
-        Text(
-            text = checkedByLabel,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.semantics { contentDescription = checkedByLabel },
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(
-                onClick = onEdit,
-                modifier = Modifier.semantics { contentDescription = "Edit proposal" },
-            ) {
-                Text(stringResource(R.string.edit))
-            }
-            Button(
-                onClick = onConfirm,
-                modifier = Modifier.semantics { contentDescription = "Confirm proposal" },
-            ) {
-                Text(stringResource(R.string.confirm))
             }
         }
     }
@@ -290,29 +286,24 @@ private fun ProposalCard(
 
 @Composable
 private fun UnavailableCard(onUseForm: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.grok_unavailable_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(R.string.grok_unavailable_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(
-            onClick = onUseForm,
-            modifier = Modifier.semantics { contentDescription = "Use a form" },
-        ) {
-            Text(stringResource(R.string.use_a_form))
+    PiCard(contentDescription = "Grok unavailable") {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
+            Text(
+                text = stringResource(R.string.grok_unavailable_title),
+                style = PiPlannerTypography.title,
+                fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
+            )
+            Text(
+                text = stringResource(R.string.grok_unavailable_body),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+            )
+            PrimaryCta(
+                text = stringResource(R.string.use_a_form),
+                onClick = onUseForm,
+                contentDescription = "Use a form",
+            )
         }
     }
 }
@@ -328,78 +319,81 @@ private fun GoalsDefinedSection(
     onEditGoal: (Goal) -> Unit,
     onContinue: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.goals_defined_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        goals.forEach { goal ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+    PiCard(contentDescription = "Goals defined") {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
+            Text(
+                text = stringResource(R.string.goals_defined_title),
+                style = PiPlannerTypography.title,
+                fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
+            )
+            goals.forEach { goal ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = goal.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8 / 2),
+                    ) {
+                        Text(
+                            text = goal.name,
+                            style = PiPlannerTypography.body,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PiPlannerColors.OnSurface,
+                        )
+                        Text(
+                            text = formatInr(goal.targetAmount),
+                            style = PiPlannerTypography.caption,
+                            color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                        )
+                    }
+                    OutlinedTextField(
+                        value = displayPercent(goal.shareOfNewCredits).toString(),
+                        onValueChange = { raw ->
+                            val digits = raw.filter { it.isDigit() }
+                            onShareChange(goal.id, digits.toIntOrNull() ?: 0)
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = goalFormFieldColors(),
+                        modifier = Modifier
+                            .width(PiPlannerDimens.Space28 * 3)
+                            .semantics { contentDescription = "${goal.name} share percent" },
                     )
+                    Spacer(modifier = Modifier.width(PiPlannerDimens.Space8 / 2))
                     Text(
-                        text = formatInr(goal.targetAmount),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = "%",
+                        style = PiPlannerTypography.body,
+                        color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                     )
-                }
-                OutlinedTextField(
-                    value = displayPercent(goal.shareOfNewCredits).toString(),
-                    onValueChange = { raw ->
-                        val digits = raw.filter { it.isDigit() }
-                        onShareChange(goal.id, digits.toIntOrNull() ?: 0)
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier
-                        .width(72.dp)
-                        .semantics { contentDescription = "${goal.name} share percent" },
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("%", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TextButton(onClick = { onEditGoal(goal) }) {
-                    Text(stringResource(R.string.edit))
+                    SecondaryCta(
+                        text = stringResource(R.string.edit),
+                        onClick = { onEditGoal(goal) },
+                        fillMaxWidth = false,
+                        style = SecondaryCtaStyle.Text,
+                        contentDescription = "Edit ${goal.name}",
+                    )
                 }
             }
-        }
 
-        Text(
-            text = continueDisabledReason
-                ?: stringResource(R.string.goals_defined_ready),
-            style = MaterialTheme.typography.bodySmall,
-            color = if (continueDisabledReason != null) {
-                MaterialTheme.colorScheme.tertiary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-        )
+            Text(
+                text = continueDisabledReason
+                    ?: stringResource(R.string.goals_defined_ready),
+                style = PiPlannerTypography.caption,
+                color = if (continueDisabledReason != null) {
+                    PiPlannerColors.Behind
+                } else {
+                    PiPlannerColors.OnSurface.copy(alpha = 0.72f)
+                },
+            )
 
-        Button(
-            onClick = onContinue,
-            enabled = canContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Continue" },
-        ) {
-            Text(stringResource(R.string.continue_label))
+            PrimaryCta(
+                text = stringResource(R.string.continue_label),
+                onClick = onContinue,
+                enabled = canContinue,
+                contentDescription = "Continue",
+            )
         }
     }
 }
@@ -414,29 +408,50 @@ private fun Composer(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .background(PiPlannerColors.SurfaceCard)
+            .padding(
+                horizontal = PiPlannerDimens.Space16,
+                vertical = PiPlannerDimens.Space12,
+            ),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
     ) {
-        Spacer(modifier = Modifier.height(1.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12),
         ) {
             OutlinedTextField(
                 value = draft,
                 onValueChange = onDraftChange,
-                placeholder = { Text(stringResource(R.string.goal_chat_placeholder)) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.goal_chat_placeholder),
+                        style = PiPlannerTypography.body,
+                    )
+                },
+                colors = goalFormFieldColors(),
+                shape = RoundedCornerShape(PiPlannerDimens.RadiusChip),
                 modifier = Modifier
                     .weight(1f)
                     .semantics { contentDescription = "Goal description" },
             )
-            Button(
+            PrimaryCta(
+                text = stringResource(R.string.send),
                 onClick = onSend,
                 enabled = canSend,
-                modifier = Modifier.semantics { contentDescription = "Send" },
-            ) {
-                Text(stringResource(R.string.send))
-            }
+                fillMaxWidth = false,
+                contentDescription = "Send",
+            )
         }
     }
 }
+
+@Composable
+internal fun goalFormFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = PiPlannerColors.NavyPrimary.copy(alpha = 0.35f),
+    unfocusedBorderColor = PiPlannerColors.NavyPrimary.copy(alpha = 0.18f),
+    focusedContainerColor = PiPlannerColors.BackgroundApp,
+    unfocusedContainerColor = PiPlannerColors.BackgroundApp,
+    cursorColor = PiPlannerColors.NavyPrimary,
+    focusedTextColor = PiPlannerColors.OnSurface,
+    unfocusedTextColor = PiPlannerColors.OnSurface,
+)
