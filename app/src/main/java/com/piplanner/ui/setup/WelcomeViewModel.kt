@@ -18,9 +18,10 @@ data class WelcomeStep(
 )
 
 /**
- * View model for Welcome (frame 1) — PRD R1.
- * Copy matches iOS PIP-35 / design frame 1.
- * Persona greeting (PIP-66 / A8) uses [DemoData.PERSONA_NAME].
+ * View model for Welcome (frame 1) — PRD R6 (visual) / behaviour from PIP-36.
+ * Copy matches iOS PIP-35 / design frame 1. Visual restyle is PIP-74 (WelcomeScreen only).
+ * Persona greeting (PIP-66 / A8) uses [DemoData.PERSONA_NAME] — kept for routing/persona tests;
+ * Welcome visual hierarchy shows brand/tagline (not greeting) per design frame 1 / iOS PIP-73.
  */
 @HiltViewModel
 class WelcomeViewModel @Inject constructor() : ViewModel() {
