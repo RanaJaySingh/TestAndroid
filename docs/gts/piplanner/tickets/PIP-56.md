@@ -1,6 +1,7 @@
 # PIP-56 — Android Transfer between goals
 
-**Status:** Implemented — rebased onto `756cfab` (PIP-54)  
+**Status:** Implemented — rebased onto `756cfab` (PIP-54); `./gradlew assembleDebug test` BUILD SUCCESSFUL  
+
 
 **Linear:** https://linear.app/telco-paytm/issue/PIP-56/android-implement-transfer-between-goals  
 **PRD:** R14 — Transfer between goals · https://docs.google.com/document/d/16cthPNS-djP0KLlH9Lak3OTDrottiD5bMnTJwW_cRDc/edit  
