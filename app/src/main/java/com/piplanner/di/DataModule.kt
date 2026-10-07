@@ -20,6 +20,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+// PostSetupBalanceSync qualifier lives in PostSetupBalanceSync.kt
+
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataBindModule {
@@ -48,6 +50,7 @@ object DataProvideModule {
     /**
      * Spec §3.3 mock — injectable so a real BalanceSyncService can replace it later.
      * Known IDs match demo persona accounts (HDFC / SBI).
+     * Consent / setup uses the seeded opening balance (₹1,00,000).
      */
     @Provides
     @Singleton
@@ -57,6 +60,24 @@ object DataProvideModule {
                 DemoData.DEMO_SAVINGS_ACCOUNT_ID,
                 DemoData.DEMO_SPENDING_ACCOUNT_ID,
             ),
+            fetchedBalancePaisa = MockBalanceSyncService.DEMO_BALANCE_PAISA,
+        )
+    }
+
+    /**
+     * Goals Sync/Update demos return a higher balance so the first post-setup Sync
+     * creates an open credit (₹10,000) — frames 10 / 13.
+     */
+    @Provides
+    @Singleton
+    @PostSetupBalanceSync
+    fun providePostSetupBalanceSyncService(): BalanceSyncService {
+        return MockBalanceSyncService(
+            knownAccountIds = setOf(
+                DemoData.DEMO_SAVINGS_ACCOUNT_ID,
+                DemoData.DEMO_SPENDING_ACCOUNT_ID,
+            ),
+            fetchedBalancePaisa = MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA,
         )
     }
 
