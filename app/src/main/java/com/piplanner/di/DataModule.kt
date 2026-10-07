@@ -8,7 +8,9 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.piplanner.data.local.DataStorePersistenceService
 import com.piplanner.data.local.PersistenceService
 import com.piplanner.domain.BalanceSyncService
+import com.piplanner.domain.GrokService
 import com.piplanner.domain.MockBalanceSyncService
+import com.piplanner.domain.StubGrokService
 import com.piplanner.util.DemoData
 import dagger.Binds
 import dagger.Module
@@ -57,6 +59,14 @@ object DataProvideModule {
             ),
         )
     }
+
+    /**
+     * Spec §3.3 stub — available by default; tests can construct
+     * [StubGrokService] with `isUnavailable = true` for frame 5c.
+     */
+    @Provides
+    @Singleton
+    fun provideGrokService(): GrokService = StubGrokService()
 
     private const val DATA_STORE_FILE: String = "piplanner_demo"
 }

@@ -64,4 +64,37 @@
 
     <string name="goals_tab_title">Goals</string>
     <string name="goals_tab_placeholder_body">Your opening balance is locked. Full Goals tab arrives in PIP-46.</string>
+
+    <string name="goal_chat_title">Goals</string>
+    <string name="goal_chat_placeholder">Describe your goals…</string>
+    <string name="use_a_form">Use a form</string>
+    <string name="send">Send</string>
+    <string name="suggested_goals">Suggested goals</string>
+    <string name="edit">Edit</string>
+    <string name="confirm">Confirm</string>
+    <string name="grok_unavailable_title">Grok unavailable</string>
+    <string name="grok_unavailable_body">You can keep going with a hand form. Ledger rules still apply.</string>
+    <string name="goals_defined_title">Goals defined</string>
+    <string name="goals_defined_ready">Shares total 100%. Continue to Opening split.</string>
+    <string name="percent_value">%1$d%%</string>
+
+    <string name="goal_form_title">Define a goal</string>
+    <string name="goal_form_subtitle">Name, target, dates, and share of new credits. Inflation defaults to 7%.</string>
+    <string name="goal_name_label">Name</string>
+    <string name="goal_name_placeholder">e.g. Car</string>
+    <string name="goal_target_label">Target</string>
+    <string name="goal_start_label">Start</string>
+    <string name="goal_end_label">End</string>
+    <string name="goal_date_hint">ISO date yyyy-MM-dd</string>
+    <string name="goal_share_label">Share of new credits</string>
+    <string name="goal_saved_so_far">Saved so far</string>
+    <string name="goal_saved_locked_hint">Locked at ₹0 while creating a goal in setup.</string>
+    <string name="goal_monthly_need">Monthly need</string>
+    <string name="save">Save</string>
+    <string name="done">Done</string>
+
+    <string name="inflation_title">Inflation</string>
+    <string name="inflation_subtitle">Used to estimate an inflation-adjusted target. Default is 7%.</string>
+    <string name="inflation_rate_label">Rate</string>
+    <string name="inflation_adjusted_target">Inflation-adjusted target</string>
 </resources>
