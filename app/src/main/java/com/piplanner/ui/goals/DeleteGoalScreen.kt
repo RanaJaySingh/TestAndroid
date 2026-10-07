@@ -59,6 +59,8 @@ fun DeleteGoalScreen(
         uiState = uiState,
         formattedAmount = viewModel::formattedAmount,
         onPercentChange = viewModel::setDisplayPercent,
+        onBeginEdit = viewModel::beginEditPercents,
+        onFinishEdit = viewModel::finishEditPercents,
         onConfirmClick = viewModel::requestConfirm,
         onConfirmDelete = viewModel::confirmDelete,
         onDismissConfirm = viewModel::dismissConfirm,
@@ -76,6 +78,8 @@ fun DeleteGoalContent(
     uiState: DeleteGoalUiState,
     formattedAmount: (String) -> String,
     onPercentChange: (String, Int) -> Unit,
+    onBeginEdit: () -> Unit,
+    onFinishEdit: () -> Unit,
     onConfirmClick: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissConfirm: () -> Unit,
@@ -152,17 +156,45 @@ fun DeleteGoalContent(
                 }
 
                 if (uiState.destinationGoals.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.delete_goal_reassign_heading),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.delete_goal_reassign_heading),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        when {
+                            uiState.canStartEdit -> {
+                                TextButton(
+                                    onClick = onBeginEdit,
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Edit reassignment"
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.edit))
+                                }
+                            }
+                            uiState.isEditingPercents -> {
+                                TextButton(
+                                    onClick = onFinishEdit,
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Done editing reassignment"
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.done))
+                                }
+                            }
+                        }
+                    }
                     uiState.destinationGoals.forEach { goal ->
                         ReassignmentRow(
                             goalName = goal.name,
                             percent = uiState.displayPercents[goal.id] ?: 0,
                             amountLabel = formattedAmount(goal.id),
-                            editable = uiState.canEditPercents && uiState.destinationGoals.size > 1,
+                            editable = uiState.canEditPercents,
                             onPercentChange = { onPercentChange(goal.id, it) },
                         )
                     }
@@ -171,6 +203,13 @@ fun DeleteGoalContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (uiState.hasEditedOnce) {
+                        Text(
+                            text = stringResource(R.string.delete_goal_edit_locked_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     if (uiState.resetStandingToEqual) {
                         Text(
                             text = stringResource(R.string.delete_goal_standing_reset_note),

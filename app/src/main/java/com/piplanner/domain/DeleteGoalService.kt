@@ -23,6 +23,11 @@ class DeleteGoalService @Inject constructor(
     private val standingSplitService: StandingSplitService,
 ) {
 
+    companion object {
+        /** History list label for GoalDeleted (PRD R13 / iOS PIP-53 parity). */
+        const val historyTitle: String = "Deleted / moved"
+    }
+
     /** Equal reassignment display percents (0…100) across [destinationGoals]. */
     fun equalReassignmentDisplayPercents(destinationGoals: List<Goal>): Map<String, Int> {
         val percents = standingSplitService.equalDisplayPercents(destinationGoals.size)

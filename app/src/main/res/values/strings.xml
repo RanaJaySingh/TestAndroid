@@ -120,7 +120,7 @@
     <string name="history_type_credit">New credit</string>
     <string name="history_type_transfer">Transfer</string>
     <string name="history_type_withdrawal">Withdrawal</string>
-    <string name="history_type_deleted">Goal deleted</string>
+    <string name="history_type_deleted">Deleted / moved</string>
 
     <string name="transfer_stub_title">Transfer</string>
     <string name="transfer_stub_body">Transfer between goals lands in a later ticket. Navigation from Goal detail is wired.</string>
@@ -139,6 +139,7 @@
     <string name="delete_goal_add_goal">Add another goal</string>
     <string name="delete_goal_add_goal_title">Add a goal</string>
     <string name="delete_goal_standing_reset_note">Standing split will reset to equal across remaining goals.</string>
+    <string name="delete_goal_edit_locked_note">Reassignment locked after one edit.</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_stub_body">Consent, Reset demo, and account preferences land in a later Settings ticket.</string>

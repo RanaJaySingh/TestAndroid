@@ -70,18 +70,53 @@ class DeleteGoalViewModelTest {
     }
 
     @Test
-    fun setDisplayPercent_movesToReassignEdit() = runTest(dispatcher) {
+    fun equalDefault_canConfirmWithoutEditing() = runTest(dispatcher) {
         seedThreeGoals()
         viewModel.configure(DemoData.DEMO_CAR_GOAL_ID)
         advanceUntilIdle()
 
+        val state = viewModel.uiState.value
+        assertThat(state.hasEditedOnce).isFalse()
+        assertThat(state.isEditingPercents).isFalse()
+        assertThat(state.canEditPercents).isFalse()
+        assertThat(state.canStartEdit).isTrue()
+        assertThat(state.canConfirm).isTrue()
+    }
+
+    @Test
+    fun editOnce_locksAfterDone() = runTest(dispatcher) {
+        seedThreeGoals()
+        viewModel.configure(DemoData.DEMO_CAR_GOAL_ID)
+        advanceUntilIdle()
+
+        // Before Edit: percent changes are ignored
+        viewModel.setDisplayPercent(DemoData.DEMO_EMERGENCY_GOAL_ID, 99)
+        assertThat(viewModel.uiState.value.displayPercents[DemoData.DEMO_EMERGENCY_GOAL_ID])
+            .isNotEqualTo(99)
+
+        viewModel.beginEditPercents()
+        assertThat(viewModel.uiState.value.isEditingPercents).isTrue()
+        assertThat(viewModel.uiState.value.canEditPercents).isTrue()
+        assertThat(viewModel.uiState.value.phase).isEqualTo(DeleteGoalPhase.ReassignEdit)
+
         viewModel.setDisplayPercent(DemoData.DEMO_EMERGENCY_GOAL_ID, 70)
         viewModel.setDisplayPercent("cccccccc-cccc-cccc-cccc-cccccccccccc", 30)
+        assertThat(viewModel.uiState.value.amountsByGoalId[DemoData.DEMO_EMERGENCY_GOAL_ID])
+            .isEqualTo(4_200_000L)
 
-        val state = viewModel.uiState.value
-        assertThat(state.phase).isEqualTo(DeleteGoalPhase.ReassignEdit)
-        assertThat(state.canConfirm).isTrue()
-        assertThat(state.amountsByGoalId[DemoData.DEMO_EMERGENCY_GOAL_ID]).isEqualTo(4_200_000L)
+        viewModel.finishEditPercents()
+        val locked = viewModel.uiState.value
+        assertThat(locked.hasEditedOnce).isTrue()
+        assertThat(locked.isEditingPercents).isFalse()
+        assertThat(locked.canEditPercents).isFalse()
+        assertThat(locked.canStartEdit).isFalse()
+        assertThat(locked.canConfirm).isTrue()
+
+        // Second pass blocked
+        viewModel.beginEditPercents()
+        viewModel.setDisplayPercent(DemoData.DEMO_EMERGENCY_GOAL_ID, 10)
+        assertThat(viewModel.uiState.value.displayPercents[DemoData.DEMO_EMERGENCY_GOAL_ID])
+            .isEqualTo(70)
     }
 
     @Test

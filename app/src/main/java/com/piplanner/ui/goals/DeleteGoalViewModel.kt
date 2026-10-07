@@ -27,6 +27,7 @@ import javax.inject.Inject
 /**
  * Delete goal flow — frames 17 / 17a–17e (PRD R13, Spec BR-9).
  * States: Reassign default, Reassign edit, Confirm, Only-goal gate.
+ * Reassignment percents follow iOS PIP-53: one Edit→Done pass ([hasEditedOnce]), then locked.
  */
 @HiltViewModel
 class DeleteGoalViewModel @Inject constructor(
@@ -85,6 +86,38 @@ class DeleteGoalViewModel @Inject constructor(
         }
     }
 
+    /** Starts the single Edit→Done reassignment pass (BR-9 / iOS hasEditedOnce). */
+    fun beginEditPercents() {
+        val state = _uiState.value
+        if (!state.canStartEdit) return
+        _uiState.update {
+            it.copy(
+                isEditingPercents = true,
+                phase = DeleteGoalPhase.ReassignEdit,
+                errorMessage = null,
+            )
+        }
+    }
+
+    /** Ends the edit pass and locks percents until Confirm. */
+    fun finishEditPercents() {
+        val state = _uiState.value
+        if (!state.isEditingPercents) return
+        _uiState.update {
+            it.copy(
+                isEditingPercents = false,
+                hasEditedOnce = true,
+                phase = DeleteGoalPhase.ReassignEdit,
+                canConfirm = canConfirm(
+                    destinations = it.destinationGoals,
+                    displayPercents = it.displayPercents,
+                    isConfirming = it.isConfirming,
+                ),
+                statusMessage = buildStatusMessage(it.destinationGoals, it.displayPercents),
+            )
+        }
+    }
+
     fun setDisplayPercent(goalId: String, percent: Int) {
         val state = _uiState.value
         if (!state.canEditPercents) return
@@ -117,7 +150,7 @@ class DeleteGoalViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 showConfirmDialog = false,
-                phase = if (it.hasEditedPercents) {
+                phase = if (it.hasEditedOnce || it.isEditingPercents) {
                     DeleteGoalPhase.ReassignEdit
                 } else {
                     DeleteGoalPhase.ReassignDefault
@@ -175,7 +208,7 @@ class DeleteGoalViewModel @Inject constructor(
                         ),
                         phase = when {
                             it.destinationGoals.isEmpty() -> DeleteGoalPhase.OnlyGoalGate
-                            it.hasEditedPercents -> DeleteGoalPhase.ReassignEdit
+                            it.hasEditedOnce || it.isEditingPercents -> DeleteGoalPhase.ReassignEdit
                             else -> DeleteGoalPhase.ReassignDefault
                         },
                     )
@@ -305,6 +338,8 @@ class DeleteGoalViewModel @Inject constructor(
             showCreateForm = phase == DeleteGoalPhase.OnlyGoalGate,
             replacementDraft = ReplacementGoalDraft.default(clock()),
             previewStandingSplits = standingPreview,
+            isEditingPercents = false,
+            hasEditedOnce = false,
         )
     }
 
@@ -424,13 +459,31 @@ data class DeleteGoalUiState(
     val replacementDraft: ReplacementGoalDraft = ReplacementGoalDraft(),
     val errorMessage: String? = null,
     val shouldNavigateBack: Boolean = false,
+    /** True only during the single Edit→Done reassignment pass. */
+    val isEditingPercents: Boolean = false,
+    /** After Done, percents stay locked until Confirm (iOS hasEditedOnce). */
+    val hasEditedOnce: Boolean = false,
 ) {
     val isOnlyGoalGate: Boolean get() = phase == DeleteGoalPhase.OnlyGoalGate
+
+    /** Percents are writable only inside the one Edit→Done pass. */
     val canEditPercents: Boolean
-        get() = destinationGoals.isNotEmpty() &&
+        get() = isEditingPercents &&
+            !hasEditedOnce &&
+            destinationGoals.size > 1 &&
             !isConfirming &&
             phase != DeleteGoalPhase.Completed &&
             phase != DeleteGoalPhase.MissingGoal &&
             phase != DeleteGoalPhase.OnlyGoalGate
-    val hasEditedPercents: Boolean get() = phase == DeleteGoalPhase.ReassignEdit
+
+    /** Show Edit when multi-destination equal default has not used its one pass yet. */
+    val canStartEdit: Boolean
+        get() = !hasEditedOnce &&
+            !isEditingPercents &&
+            destinationGoals.size > 1 &&
+            !isConfirming &&
+            phase != DeleteGoalPhase.Completed &&
+            phase != DeleteGoalPhase.MissingGoal &&
+            phase != DeleteGoalPhase.OnlyGoalGate &&
+            phase != DeleteGoalPhase.Confirm
 }

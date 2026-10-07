@@ -7,18 +7,19 @@ Ticket: https://linear.app/telco-paytm/issue/PIP-54/android-implement-delete-goa
 Delete goal with money reassignment and standing-split renormalization (PRD R13, Spec BR-9 / §5):
 
 - `StandingSplitService` — shared merge-friendly API (`equalSplits`, `renormalizeAfterRemoving`, `resetToEqual`, `upsert`, `applySharesToGoals`) used by delete and by `GoalHeldChangeService` (PIP-50); ready for PIP-52 Standing split screen
-- `DeleteGoalService` — equal default reassignment, paisa allocations via largest-remainder, locked `HistoryEntryType.GoalDeleted` (“deleted / moved”), apply delete + standing renormalize; clears `heldGoalChanges` for the deleted goal; only-goal gate requires replacement; mid-delete create can reset standing split to equal (17d)
-- `DeleteGoalViewModel` + `DeleteGoalScreen` — states: Reassign default, Reassign edit, Confirm, Only-goal gate
+- `DeleteGoalService` — equal default reassignment, paisa allocations via largest-remainder, locked `HistoryEntryType.GoalDeleted`, apply delete + standing renormalize; clears `heldGoalChanges` for the deleted goal; only-goal gate requires replacement; mid-delete create can reset standing split to equal (17d)
+- `DeleteGoalService.historyTitle = "Deleted / moved"` — shared History label (iOS PIP-53 parity); used by `GoalDetailScreen.historyTypeLabel`
+- `DeleteGoalViewModel` + `DeleteGoalScreen` — states: Reassign default, Reassign edit, Confirm, Only-goal gate; **Edit→Done** one-pass lock via `hasEditedOnce` / `isEditingPercents`
 - Wired from Goal detail (PIP-50) Delete → `delete_goal/{goalId}` (replaces PIP-50 stub)
-- Unit tests: reassignment + renormalization (`DeleteGoalServiceTest`, `StandingSplitServiceTest`) and ViewModel gate/confirm (`DeleteGoalViewModelTest`)
+- Unit tests: reassignment + renormalization + history title + edit-once lock
 
 ## Mapping to Spec / PRD
 
 | Requirement | Implementation |
 |-------------|----------------|
 | R13 / BR-9 equal default | `DeleteGoalService.equalReassignmentDisplayPercents` |
-| Editable once before confirm | `DeleteGoalPhase.ReassignEdit` via `setDisplayPercent` |
-| History deleted / moved | Locked `GoalDeleted` with `deletedGoalName`, `releasedAmount`, allocations |
+| Editable once before confirm | `beginEditPercents` / `finishEditPercents` → `hasEditedOnce` lock |
+| History deleted / moved | `DeleteGoalService.historyTitle` + locked `GoalDeleted` entry |
 | Standing split renormalizes | `StandingSplitService.renormalizeAfterRemoving` in `applyDelete` |
 | Only-goal gate (17e) | Confirm disabled until replacement created |
 | Mid-delete create (17d) | Replacement form; `resetStandingSplitToEqual = true` |
@@ -37,11 +38,16 @@ Delete goal with money reassignment and standing-split renormalization (PRD R13,
 
 ## Base / rebase
 
-Rebased onto `main@dac8439` (PIP-50 Goal detail merged). Soft Goals-tab Delete hook removed; entry is Goal detail Delete only.
+Rebased onto `main@7830826` (PIP-46 Goals tab). Entry remains Goal detail Delete.
+
+## GTS Review round 1 fixes
+
+1. History label → `DeleteGoalService.historyTitle` / `history_type_deleted` = **"Deleted / moved"** (asserted in `DeleteGoalServiceTest`)
+2. Edit-once lock → Edit→Done pass with `hasEditedOnce`; equal default may confirm without editing (`DeleteGoalViewModelTest`)
 
 ## Test result
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL**.
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-1 fixes + rebase onto `7830826`).
 
 ## Assumptions
 

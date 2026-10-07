@@ -26,6 +26,11 @@ class DeleteGoalServiceTest {
     }
 
     @Test
+    fun historyTitleMatchesDeletedMovedAcCopy() {
+        assertThat(DeleteGoalService.historyTitle).isEqualTo("Deleted / moved")
+    }
+
+    @Test
     fun equalReassignment_defaultsToEqualPercents() {
         val goals = seededGoals()
         val percents = service.equalReassignmentDisplayPercents(
