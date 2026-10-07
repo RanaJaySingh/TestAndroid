@@ -66,6 +66,8 @@ class SettingsViewModelTest {
         assertThat(state.consentAutoUpdate).isTrue()
         assertThat(state.dedicatedAccountTitle).contains("HDFC")
         assertThat(state.linkedAccounts.any { it.isDedicated }).isTrue()
+        val spending = state.linkedAccounts.single { it.id == DemoData.DEMO_SPENDING_ACCOUNT_ID }
+        assertThat(spending.subtitle.lowercase()).contains("not tracked")
     }
 
     @Test
@@ -155,7 +157,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun resetDemo_clearsGoalsHistoryAndNavigatesToWelcome() = runTest(dispatcher) {
+    fun resetDemo_clearsGoalsHistoryAndNavigatesToWelcome_postResetMatchesDemoInit() = runTest(dispatcher) {
         persistence.saveState(makePostSetupState(consent = true))
         viewModel = createViewModel()
         viewModel.load()
