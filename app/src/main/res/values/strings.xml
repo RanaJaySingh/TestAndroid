@@ -137,6 +137,8 @@
     <string name="history_type_transfer">Transfer</string>
     <string name="history_type_withdrawal">Withdrawal</string>
     <string name="history_type_deleted">Deleted / moved</string>
+    <!-- History list type label (PIP-60 AC / PIP-59 parity); writer title remains above. -->
+    <string name="history_type_goal_deleted_list">Goal deleted</string>
 
     <string name="transfer_title">Transfer</string>
     <string name="transfer_subtitle">Move saved money between goals. Standing split stays the same.</string>

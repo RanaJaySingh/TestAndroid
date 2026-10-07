@@ -16,8 +16,9 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 /**
- * Read-only History detail for Transfer / Withdrawal / GoalDeleted (and any locked non-credit).
- * Frame 12a caption: [HistoryService.ORIGINAL_AMOUNTS_CAPTION].
+ * Read-only History detail for locked entries (saved New credit, Transfer, Withdrawal,
+ * GoalDeleted) — frame 12a caption [HistoryService.ORIGINAL_AMOUNTS_CAPTION].
+ * Opening balance uses [HistoryOpeningBalanceScreen] instead.
  */
 @HiltViewModel
 class HistoryDetailViewModel @Inject constructor(
@@ -71,6 +72,15 @@ class HistoryDetailViewModel @Inject constructor(
 
     private fun detailLines(entry: HistoryEntry): List<String> {
         return when (entry.type) {
+            HistoryEntryType.NewCredit -> listOfNotNull(
+                if (entry.isTyped) "Typed" else null,
+                entry.previousBalance?.let {
+                    "Previous ${formattingService.formatInrFromPaisa(it)}"
+                },
+                entry.newBalance?.let {
+                    "Balance now ${formattingService.formatInrFromPaisa(it)}"
+                },
+            )
             HistoryEntryType.Transfer -> listOfNotNull(
                 entry.fromGoalId?.let { "From goal: $it" },
                 entry.toGoalId?.let { "To goal: $it" },
@@ -86,9 +96,7 @@ class HistoryDetailViewModel @Inject constructor(
             HistoryEntryType.GoalDeleted -> listOfNotNull(
                 entry.deletedGoalName?.let { "Deleted: $it" },
             )
-            HistoryEntryType.OpeningBalance,
-            HistoryEntryType.NewCredit,
-            -> emptyList()
+            HistoryEntryType.OpeningBalance -> emptyList()
         }
     }
 

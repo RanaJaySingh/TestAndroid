@@ -29,7 +29,8 @@ class HistoryService @Inject constructor(
             HistoryEntryType.NewCredit -> TYPE_NEW_CREDIT
             HistoryEntryType.Transfer -> TYPE_TRANSFER
             HistoryEntryType.Withdrawal -> TYPE_WITHDRAWAL
-            HistoryEntryType.GoalDeleted -> DeleteGoalService.historyTitle
+            // List label (AC / PIP-59). Writer title "Deleted / moved" stays on DeleteGoalService.
+            HistoryEntryType.GoalDeleted -> TYPE_GOAL_DELETED
         }
     }
 
@@ -94,13 +95,11 @@ class HistoryService @Inject constructor(
     }
 
     fun navigationTarget(entry: HistoryEntry): HistoryNavigationTarget {
-        return when (entry.type) {
-            HistoryEntryType.NewCredit -> HistoryNavigationTarget.CreditEntry(entry.id)
-            HistoryEntryType.OpeningBalance -> HistoryNavigationTarget.OpeningBalanceReadOnly(entry.id)
-            HistoryEntryType.Transfer,
-            HistoryEntryType.Withdrawal,
-            HistoryEntryType.GoalDeleted,
-            -> HistoryNavigationTarget.LockedDetail(entry.id)
+        return when {
+            isOpenAssignable(entry) -> HistoryNavigationTarget.CreditEntry(entry.id)
+            entry.type == HistoryEntryType.OpeningBalance ->
+                HistoryNavigationTarget.OpeningBalanceReadOnly(entry.id)
+            else -> HistoryNavigationTarget.LockedDetail(entry.id)
         }
     }
 
@@ -117,6 +116,8 @@ class HistoryService @Inject constructor(
         const val TYPE_NEW_CREDIT: String = "New credit"
         const val TYPE_TRANSFER: String = "Transfer"
         const val TYPE_WITHDRAWAL: String = "Withdrawal"
+        /** History list label for GoalDeleted (AC2 / PIP-59 parity). */
+        const val TYPE_GOAL_DELETED: String = "Goal deleted"
         const val ASSIGN_NOW_SUBTITLE: String = "Assign now"
         const val TYPED_BADGE: String = "Typed"
 

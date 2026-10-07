@@ -42,6 +42,77 @@ class HistoryDetailViewModelTest {
     }
 
     @Test
+    fun lockedNewCredit_exposesOriginalAmountsCaptionNotLockedAmounts() = runTest(dispatcher) {
+        val entry = HistoryEntry(
+            id = "credit-locked",
+            type = HistoryEntryType.NewCredit,
+            createdAt = "2024-02-01T00:00:00Z",
+            isLocked = true,
+            creditAmount = 5_000_000L,
+            previousBalance = 10_000_000L,
+            newBalance = 15_000_000L,
+            allocations = listOf(
+                GoalAllocation("g1", "Car", 3_000_000L, 0.6),
+                GoalAllocation("g2", "Emergency", 2_000_000L, 0.4),
+            ),
+        )
+        persistence.saveState(AppState(history = listOf(entry), hasCompletedSetup = true))
+
+        val viewModel = HistoryDetailViewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(HistoryDetailViewModel.NAV_ARG_ENTRY_ID to "credit-locked"),
+            ),
+            repository = PiPlannerRepository(persistence, dispatcher),
+            historyService = HistoryService(FormattingService()),
+            formattingService = FormattingService(),
+        )
+
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.entry != null }
+
+        assertThat(state.missing).isFalse()
+        assertThat(state.isReadOnly).isTrue()
+        assertThat(state.typeLabel).isEqualTo("New credit")
+        assertThat(state.caption).isEqualTo(HistoryService.ORIGINAL_AMOUNTS_CAPTION)
+        assertThat(state.caption).isEqualTo("Original amounts never change")
+        assertThat(state.caption).isNotEqualTo("Locked amounts never change")
+        assertThat(state.formattedAmount).isEqualTo("₹50,000")
+        assertThat(state.allocationRows).hasSize(2)
+    }
+
+    @Test
+    fun goalDeleted_listTypeLabelIsGoalDeleted() = runTest(dispatcher) {
+        val entry = HistoryEntry(
+            id = "deleted-1",
+            type = HistoryEntryType.GoalDeleted,
+            createdAt = "2024-03-03T00:00:00Z",
+            isLocked = true,
+            deletedGoalName = "Vacation",
+            releasedAmount = 1_000_000L,
+            allocations = listOf(
+                GoalAllocation("g1", "Car", 600_000L, 0.6),
+                GoalAllocation("g2", "Emergency", 400_000L, 0.4),
+            ),
+        )
+        persistence.saveState(AppState(history = listOf(entry), hasCompletedSetup = true))
+
+        val viewModel = HistoryDetailViewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(HistoryDetailViewModel.NAV_ARG_ENTRY_ID to "deleted-1"),
+            ),
+            repository = PiPlannerRepository(persistence, dispatcher),
+            historyService = HistoryService(FormattingService()),
+            formattingService = FormattingService(),
+        )
+
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.entry != null }
+
+        assertThat(state.typeLabel).isEqualTo("Goal deleted")
+        assertThat(state.caption).isEqualTo(HistoryService.ORIGINAL_AMOUNTS_CAPTION)
+    }
+
+    @Test
     fun lockedTransfer_exposesReadOnlyCaptionAndAllocations() = runTest(dispatcher) {
         val entry = HistoryEntry(
             id = "transfer-1",

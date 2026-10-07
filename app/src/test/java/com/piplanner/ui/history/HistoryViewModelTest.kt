@@ -155,6 +155,50 @@ class HistoryViewModelTest {
     }
 
     @Test
+    fun tapLockedNewCredit_navigatesToLockedDetailNotCreditEntry() = runTest(dispatcher) {
+        persistence.saveState(
+            AppState(
+                history = listOf(
+                    openingEntry("opening", "2024-01-01T00:00:00Z"),
+                    lockedCredit("credit", "2024-02-01T00:00:00Z"),
+                ),
+                hasCompletedSetup = true,
+            ),
+        )
+        viewModel = createViewModel()
+        viewModel.load()
+        advanceUntilIdle()
+
+        val lockedRow = viewModel.uiState.value.rows.first { it.id == "credit" }
+        assertThat(lockedRow.showLockIcon).isTrue()
+        assertThat(lockedRow.isOpenAssignable).isFalse()
+
+        viewModel.onEntryClick("credit")
+        assertThat(viewModel.uiState.value.navigateToLockedDetailId).isEqualTo("credit")
+        assertThat(viewModel.uiState.value.navigateToCreditEntryId).isNull()
+    }
+
+    @Test
+    fun goalDeletedListLabel_isGoalDeleted() = runTest(dispatcher) {
+        persistence.saveState(
+            AppState(
+                history = listOf(
+                    openingEntry("opening", "2024-01-01T00:00:00Z"),
+                    deletedEntry("deleted", "2024-02-20T00:00:00Z"),
+                ),
+                hasCompletedSetup = true,
+            ),
+        )
+        viewModel = createViewModel()
+        viewModel.load()
+        advanceUntilIdle()
+
+        val deletedRow = viewModel.uiState.value.rows.first { it.id == "deleted" }
+        assertThat(deletedRow.typeLabel).isEqualTo("Goal deleted")
+        assertThat(deletedRow.typeLabel).isNotEqualTo("Deleted / moved")
+    }
+
+    @Test
     fun readOnlyCaption_matchesFrame12a() {
         assertThat(HistoryService.ORIGINAL_AMOUNTS_CAPTION)
             .isEqualTo("Original amounts never change")

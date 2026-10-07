@@ -57,7 +57,12 @@ class HistoryServiceTest {
         assertThat(service.typeLabel(HistoryEntryType.Transfer)).isEqualTo("Transfer")
         assertThat(service.typeLabel(HistoryEntryType.Withdrawal)).isEqualTo("Withdrawal")
         assertThat(service.typeLabel(HistoryEntryType.GoalDeleted))
-            .isEqualTo(DeleteGoalService.historyTitle)
+            .isEqualTo(HistoryService.TYPE_GOAL_DELETED)
+        assertThat(HistoryService.TYPE_GOAL_DELETED).isEqualTo("Goal deleted")
+        // Writer title may remain "Deleted / moved" elsewhere (PIP-54); list label is distinct.
+        assertThat(DeleteGoalService.historyTitle).isEqualTo("Deleted / moved")
+        assertThat(service.typeLabel(HistoryEntryType.GoalDeleted))
+            .isNotEqualTo(DeleteGoalService.historyTitle)
     }
 
     @Test
@@ -99,7 +104,7 @@ class HistoryServiceTest {
     }
 
     @Test
-    fun lockedCredit_navigatesToCreditEntry_openCreditSame() {
+    fun openCredit_navigatesToCreditEntry_lockedCreditToReadOnlyDetail() {
         val open = entry(
             id = "open",
             type = HistoryEntryType.NewCredit,
@@ -110,9 +115,11 @@ class HistoryServiceTest {
         val locked = open.copy(id = "locked", isLocked = true)
         assertThat(service.navigationTarget(open))
             .isEqualTo(HistoryNavigationTarget.CreditEntry("open"))
+        // GTS r1 must-fix: locked New credit → 12a History detail, not CreditEntry.
         assertThat(service.navigationTarget(locked))
-            .isEqualTo(HistoryNavigationTarget.CreditEntry("locked"))
+            .isEqualTo(HistoryNavigationTarget.LockedDetail("locked"))
         assertThat(service.isReadOnly(locked)).isTrue()
+        assertThat(service.isOpenAssignable(locked)).isFalse()
     }
 
     @Test
