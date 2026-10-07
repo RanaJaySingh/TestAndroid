@@ -22,13 +22,14 @@ import com.piplanner.ui.goals.CreditEntryScreen
 import com.piplanner.ui.goals.CreditEntryViewModel
 import com.piplanner.ui.goals.DeleteGoalScreen
 import com.piplanner.ui.goals.DeleteGoalViewModel
-import com.piplanner.ui.goals.GoalActionStubScreen
 import com.piplanner.ui.goals.GoalDetailScreen
 import com.piplanner.ui.goals.GoalDetailViewModel
 import com.piplanner.ui.goals.GoalEditScreen
 import com.piplanner.ui.goals.GoalEditViewModel
 import com.piplanner.ui.goals.StandingSplitScreen
 import com.piplanner.ui.goals.StandingSplitViewModel
+import com.piplanner.ui.goals.TransferScreen
+import com.piplanner.ui.goals.TransferViewModel
 import com.piplanner.ui.goals.WithdrawalScreen
 import com.piplanner.ui.goals.WithdrawalViewModel
 import com.piplanner.ui.settings.SettingsScreen
@@ -68,7 +69,12 @@ object PiPlannerRoutes {
     const val GOAL_EDIT: String = "goal_edit/{goalId}"
     const val CREDIT_ENTRY: String = "credit_entry/{entryId}"
     const val WITHDRAWAL: String = "withdrawal/{previousBalance}/{newBalance}/{isTyped}"
-    const val TRANSFER: String = "transfer/{goalId}"
+    /**
+     * Transfer (PIP-56). [fromGoalId] may be blank when opened from Goals tab.
+     * Optional [toGoalId] / [amountPaisa] support Ask proposal pre-fill (16c).
+     */
+    const val TRANSFER: String =
+        "transfer?fromGoalId={fromGoalId}&toGoalId={toGoalId}&amountPaisa={amountPaisa}"
     const val DELETE_GOAL: String = "delete_goal/{goalId}"
     const val SETTINGS: String = "settings"
 
@@ -80,7 +86,16 @@ object PiPlannerRoutes {
         newBalancePaisa: Long,
         isTyped: Boolean = false,
     ): String = "withdrawal/$previousBalancePaisa/$newBalancePaisa/$isTyped"
-    fun transfer(goalId: String): String = "transfer/$goalId"
+
+    fun transfer(
+        fromGoalId: String = "",
+        toGoalId: String = "",
+        amountPaisa: Long? = null,
+    ): String {
+        val amount = amountPaisa?.toString().orEmpty()
+        return "transfer?fromGoalId=$fromGoalId&toGoalId=$toGoalId&amountPaisa=$amount"
+    }
+
     fun deleteGoal(goalId: String): String = "delete_goal/$goalId"
 }
 
@@ -286,6 +301,9 @@ fun PiPlannerNavHost(
                 onOpenStandingSplit = {
                     navController.navigate(PiPlannerRoutes.STANDING_SPLIT)
                 },
+                onOpenTransfer = {
+                    navController.navigate(PiPlannerRoutes.transfer())
+                },
             )
         }
         composable(PiPlannerRoutes.STANDING_SPLIT) {
@@ -367,13 +385,23 @@ fun PiPlannerNavHost(
         composable(
             route = PiPlannerRoutes.TRANSFER,
             arguments = listOf(
-                navArgument(GoalDetailViewModel.NAV_ARG_GOAL_ID) { type = NavType.StringType },
+                navArgument(TransferViewModel.NAV_ARG_FROM_GOAL_ID) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument(TransferViewModel.NAV_ARG_TO_GOAL_ID) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument(TransferViewModel.NAV_ARG_AMOUNT_PAISA) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
             ),
         ) {
-            GoalActionStubScreen(
-                title = stringResource(R.string.transfer_stub_title),
-                body = stringResource(R.string.transfer_stub_body),
-                contentDescription = "Transfer stub",
+            val viewModel: TransferViewModel = hiltViewModel()
+            TransferScreen(
+                viewModel = viewModel,
                 onBack = { navController.popBackStack() },
             )
         }

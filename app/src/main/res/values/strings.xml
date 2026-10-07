@@ -138,8 +138,18 @@
     <string name="history_type_withdrawal">Withdrawal</string>
     <string name="history_type_deleted">Deleted / moved</string>
 
-    <string name="transfer_stub_title">Transfer</string>
-    <string name="transfer_stub_body">Transfer between goals lands in a later ticket. Navigation from Goal detail is wired.</string>
+    <string name="transfer_title">Transfer</string>
+    <string name="transfer_subtitle">Move saved money between goals. Standing split stays the same.</string>
+    <string name="transfer_from_label">From</string>
+    <string name="transfer_to_label">To</string>
+    <string name="transfer_amount_label">Amount</string>
+    <string name="transfer_select_goal">Select a goal</string>
+    <string name="transfer_after_title">After transfer</string>
+    <string name="transfer_after_from">%1$s → %2$s</string>
+    <string name="transfer_after_to">%1$s → %2$s</string>
+    <string name="transfer_move">Move</string>
+    <string name="transfer_error_title">Couldn’t complete transfer</string>
+    <string name="transfer_open">Transfer</string>
 
     <string name="delete_goal_title">Delete goal</string>
     <string name="delete_goal_subtitle">%1$s will be removed. Assign its saved money to remaining goals.</string>
