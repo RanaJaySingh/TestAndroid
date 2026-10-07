@@ -66,7 +66,7 @@ Started from `33b810ba` (main after PIP-70 #20). Previously rebased onto `1fcbdf
 
 ## Test results
 
-`./gradlew assembleDebug test` — pending retest after rebase onto `1f3bb8fa` (includes `AccountsConsentVisualTest` + existing behaviour suites).
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** after rebase onto `1f3bb8fa` (includes `AccountsConsentVisualTest` + existing behaviour suites).
 
 ## How to run tests
 
