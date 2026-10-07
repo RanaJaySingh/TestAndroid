@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,9 +17,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.piplanner.ui.theme.PiIcons
 
 /**
  * Single History list row — type icon/label, amount, lock for saved entries (frame 12).
+ * PIP-72: Material icons for type + lock (Spec §3.3).
  */
 @Composable
 fun HistoryEntryRow(
@@ -39,14 +42,13 @@ fun HistoryEntryRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = row.typeIcon,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
+        Icon(
+            imageVector = PiIcons.resolve(row.typeIcon),
+            contentDescription = "History icon ${row.type.name}",
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier
-                .size(36.dp)
+                .size(28.dp)
                 .semantics { contentDescription = "History icon ${row.type.name}" },
-            color = MaterialTheme.colorScheme.primary,
         )
         Column(
             modifier = Modifier.weight(1f),
@@ -77,13 +79,13 @@ fun HistoryEntryRow(
                 fontWeight = FontWeight.SemiBold,
             )
             if (row.showLockIcon) {
-                Text(
-                    text = "⊠",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Locked history entry"
-                    },
+                Icon(
+                    imageVector = PiIcons.lock,
+                    contentDescription = "Locked history entry",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .semantics { contentDescription = "Locked history entry" },
                 )
             }
         }

@@ -67,7 +67,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    // ui-test-manifest omitted: ComponentActivity is declared (exported=false) in the app
+    // manifest so Robolectric createComposeRule works for debug + release unit tests.
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
@@ -81,6 +84,9 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
-    // Robolectric / androidx.test.core intentionally omitted: PersistenceServiceResetTest
-    // uses a JVM temp-file DataStore so CI cannot flake on MavenArtifactFetcher downloads.
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    // PersistenceServiceResetTest still uses a JVM temp-file DataStore (no Robolectric there)
+    // so CI cannot flake on MavenArtifactFetcher downloads for that suite.
 }
