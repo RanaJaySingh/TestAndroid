@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.data.model.Account
+import com.piplanner.util.DemoData
 
 /**
  * Accounts screen — design frame 2 (Step 1 of 3). Pick exactly one Dedicated savings (BR-1 / R2).
@@ -183,6 +184,16 @@ private fun AccountDedicatedRow(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (DemoData.isSpendingAccount(account)) {
+                    Text(
+                        text = stringResource(R.string.accounts_spending_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics {
+                            contentDescription = "accounts.spendingNote"
+                        },
+                    )
+                }
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,

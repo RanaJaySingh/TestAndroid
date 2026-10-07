@@ -66,6 +66,14 @@ fun WelcomeContent(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
+                text = uiState.greeting,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.semantics {
+                    contentDescription = "welcome.greeting"
+                },
+            )
+            Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,

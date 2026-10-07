@@ -6,10 +6,12 @@
     <string name="welcome_subtitle">Every credit to savings gets a goal before it can be spent.</string>
     <string name="welcome_how_it_works">How it works</string>
     <string name="welcome_cta">Set up savings</string>
+    <string name="persona_greeting_content_description">Persona greeting</string>
 
     <string name="accounts_step_label">Step 1 of 3</string>
     <string name="accounts_title">Choose your Dedicated savings</string>
     <string name="accounts_subtitle">Exactly one account can be Dedicated. Credits to that account are assigned to goals.</string>
+    <string name="accounts_spending_note">Spending account — everyday payments are not seen in PiPlanner.</string>
     <string name="dedicated_savings_label">Dedicated</string>
     <string name="continue_label">Continue</string>
     <string name="accounts_save_failed_title">Couldn’t save account</string>
@@ -63,6 +65,7 @@
     <string name="ok">OK</string>
 
     <string name="goals_tab_title">Goals</string>
+    <string name="goals_greeting_content_description">Persona greeting</string>
     <string name="goals_total_savings">Total savings</string>
     <string name="goals_section_header">Your goals</string>
     <string name="goals_empty">No goals yet</string>

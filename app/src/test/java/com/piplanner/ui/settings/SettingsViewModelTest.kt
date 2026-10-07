@@ -66,6 +66,8 @@ class SettingsViewModelTest {
         assertThat(state.consentAutoUpdate).isTrue()
         assertThat(state.dedicatedAccountTitle).contains("HDFC")
         assertThat(state.linkedAccounts.any { it.isDedicated }).isTrue()
+        val spending = state.linkedAccounts.single { it.id == DemoData.DEMO_SPENDING_ACCOUNT_ID }
+        assertThat(spending.subtitle.lowercase()).contains("not tracked")
     }
 
     @Test
@@ -155,7 +157,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun resetDemo_clearsGoalsHistoryAndNavigatesToWelcome() = runTest(dispatcher) {
+    fun resetDemo_clearsGoalsHistoryAndNavigatesToWelcome_postResetMatchesDemoInit() = runTest(dispatcher) {
         persistence.saveState(makePostSetupState(consent = true))
         viewModel = createViewModel()
         viewModel.load()
@@ -176,6 +178,14 @@ class SettingsViewModelTest {
         assertThat(persistence.loadState().history).isEmpty()
         assertThat(persistence.loadState().standingSplits).isEmpty()
         assertThat(persistence.loadState().hasCompletedSetup).isFalse()
+        // PIP-66: post-reset empty ledger matches first-launch; Accounts reseeds via sampleAccounts().
+        assertThat(DemoData.isFirstLaunchOrPostReset(persistence.loadState())).isTrue()
+        assertThat(DemoData.initializeDemo().accounts.map { it.id })
+            .containsExactly(
+                DemoData.DEMO_SAVINGS_ACCOUNT_ID,
+                DemoData.DEMO_SPENDING_ACCOUNT_ID,
+            )
+            .inOrder()
     }
 
     @Test

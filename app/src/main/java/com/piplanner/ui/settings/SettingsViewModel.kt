@@ -8,6 +8,7 @@ import com.piplanner.data.repository.PiPlannerRepository
 import com.piplanner.domain.DedicatedAccountService
 import com.piplanner.domain.FormattingService
 import com.piplanner.domain.GoalsTabService
+import com.piplanner.util.DemoData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -160,7 +161,11 @@ class SettingsViewModel @Inject constructor(
 
     private fun linkedAccountSubtitle(account: Account): String {
         return buildString {
-            append(if (account.isDedicated) "Dedicated savings" else "Spending")
+            when {
+                account.isDedicated -> append("Dedicated savings")
+                DemoData.isSpendingAccount(account) -> append("Spending · not tracked in PiPlanner")
+                else -> append("Spending")
+            }
             if (account.isPaytmLinked) append(" · Paytm linked")
         }
     }

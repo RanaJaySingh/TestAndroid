@@ -49,17 +49,14 @@ object DataProvideModule {
 
     /**
      * Spec §3.3 mock — injectable so a real BalanceSyncService can replace it later.
-     * Known IDs match demo persona accounts (HDFC / SBI).
+     * Only the dedicated savings account is tracked (R25 — spending SBI payments not seen).
      * Consent / setup uses the seeded opening balance (₹1,00,000).
      */
     @Provides
     @Singleton
     fun provideBalanceSyncService(): BalanceSyncService {
         return MockBalanceSyncService(
-            knownAccountIds = setOf(
-                DemoData.DEMO_SAVINGS_ACCOUNT_ID,
-                DemoData.DEMO_SPENDING_ACCOUNT_ID,
-            ),
+            knownAccountIds = DemoData.trackedAccountIds(),
             fetchedBalancePaisa = MockBalanceSyncService.DEMO_BALANCE_PAISA,
         )
     }
@@ -67,16 +64,14 @@ object DataProvideModule {
     /**
      * Goals Sync/Update demos return a higher balance so the first post-setup Sync
      * creates an open credit (₹10,000) — frames 10 / 13.
+     * Spending account is intentionally omitted (R25).
      */
     @Provides
     @Singleton
     @PostSetupBalanceSync
     fun providePostSetupBalanceSyncService(): BalanceSyncService {
         return MockBalanceSyncService(
-            knownAccountIds = setOf(
-                DemoData.DEMO_SAVINGS_ACCOUNT_ID,
-                DemoData.DEMO_SPENDING_ACCOUNT_ID,
-            ),
+            knownAccountIds = DemoData.trackedAccountIds(),
             fetchedBalancePaisa = MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA,
         )
     }
