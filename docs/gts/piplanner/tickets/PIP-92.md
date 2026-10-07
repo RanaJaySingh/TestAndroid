@@ -1,6 +1,6 @@
 # PIP-92 — Android History tab list visual
 
-**Status:** Implemented on `cursor/pip-92-history-list-visual-b30a` (from `1f3bb8f` / main)  
+**Status:** Implemented on `cursor/pip-92-history-list-visual-b30a` (rebased onto `1a77a3b` / main)  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-92/android-history-tab-list-visual  
 **PRD:** R15 · https://docs.google.com/document/d/18r0wSKMTpePcjCRYypcKbtabghuCyd_TPGWhLEee0AU/edit  
 **Spec:** §5.2 J6 · https://docs.google.com/document/d/1pvhxAPCyLrLIzEBNkiUh5-lOA8y7onLiTgl_eJTnlhk/edit  
@@ -54,7 +54,7 @@ History ordering / lock / destination logic (PIP-60 Done); History entry detail 
 
 ## Base
 
-`1f3bb8fa926265df96f4324af374522d1b2da7db` (main tip with PIP-94). Touches **only** History list UI + ticket doc + visual smoke test — prefer main for shared `PiCard` / tokens / icons. Prior draft PR #31 was closed without merge; this is a fresh branch/PR.
+`1a77a3b87855d3b6dfa548db903d9d4503396f56` (main tip with PIP-90). Touches **only** History list UI + ticket doc + visual smoke test — prefer main for shared `PiCard` / tokens / icons. Prior draft PR #31 was closed without merge; this is a fresh branch/PR (rebased after tip-lag).
 
 ## Verify
 
