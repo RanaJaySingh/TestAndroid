@@ -62,11 +62,11 @@ Compare device/emulator (or Compose previews) to design artifact:
 
 ## Parallel work / base
 
-Started from `33b810ba` (main after PIP-70 #20). Previously rebased onto `1fcbdff7` / `1f3bb8fa` / `1a77a3b8`. **Current tip:** rebased onto `4552dca4` (main after PIP-78 Update/UPI #29; also includes PIP-82). Keep-both on `ConsentSheet.kt` (PIP-76 Consent+FetchedBalance chrome + PIP-78 Update/Other/WrongPin choice rows & CTAs) and `strings.xml`. Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, Welcome (PIP-74), Goals home (PIP-82), sheets (PIP-90).
+Started from `33b810ba` (main after PIP-70 #20). Previously rebased through `4552dca4` (PIP-78). **Current tip:** rebased onto `5f938820` (main after PIP-92 History list #32). Keep-both retained on `ConsentSheet.kt` (PIP-76 Consent+FetchedBalance + PIP-78 Update/Other/WrongPin) and `strings.xml`; clean vs PIP-92 (no shared files). Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc).
 
 ## Test results
 
-`./gradlew assembleDebug test` — prior tips green; re-verify via GitHub CI after rebase onto `4552dca4`.
+`./gradlew assembleDebug test` — prior tips green; re-verify via GitHub CI after rebase onto `5f938820`.
 
 ## How to run tests
 
