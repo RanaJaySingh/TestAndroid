@@ -91,6 +91,13 @@
     <string name="withdrawal_stub_body">Lower balance was detected. Full withdrawal allocation UI lands in a separate ticket.</string>
     <string name="apply">Apply</string>
     <string name="close">Close</string>
+
+    <string name="standing_split_title">Standing split</string>
+    <string name="standing_split_subtitle">Share of new credits for the next deposit. Splits must total 100%.</string>
+    <string name="standing_split_stays_put">Saved money stays put</string>
+    <string name="standing_split_skip_body">One goal — standing split is 100% automatically.</string>
+    <string name="standing_split_save_failed_title">Couldn’t save standing split</string>
+
     <string name="back">Back</string>
     <string name="transfer">Transfer</string>
     <string name="delete">Delete</string>

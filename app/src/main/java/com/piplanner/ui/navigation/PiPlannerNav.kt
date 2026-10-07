@@ -25,6 +25,8 @@ import com.piplanner.ui.goals.GoalDetailScreen
 import com.piplanner.ui.goals.GoalDetailViewModel
 import com.piplanner.ui.goals.GoalEditScreen
 import com.piplanner.ui.goals.GoalEditViewModel
+import com.piplanner.ui.goals.StandingSplitScreen
+import com.piplanner.ui.goals.StandingSplitViewModel
 import com.piplanner.ui.settings.SettingsScreen
 import com.piplanner.ui.setup.AccountsScreen
 import com.piplanner.ui.setup.AccountsViewModel
@@ -57,6 +59,7 @@ object PiPlannerRoutes {
     const val GOAL_CHAT: String = "goal_chat"
     const val OPENING_SPLIT: String = "opening_split"
     const val GOALS_TAB: String = "goals_tab"
+    const val STANDING_SPLIT: String = "standing_split"
     const val GOAL_DETAIL: String = "goal_detail/{goalId}"
     const val GOAL_EDIT: String = "goal_edit/{goalId}"
     const val CREDIT_ENTRY: String = "credit_entry/{entryId}"
@@ -269,6 +272,16 @@ fun PiPlannerNavHost(
                 onOpenWithdrawalStub = {
                     navController.navigate(PiPlannerRoutes.WITHDRAWAL_STUB)
                 },
+                onOpenStandingSplit = {
+                    navController.navigate(PiPlannerRoutes.STANDING_SPLIT)
+                },
+            )
+        }
+        composable(PiPlannerRoutes.STANDING_SPLIT) {
+            val viewModel: StandingSplitViewModel = hiltViewModel()
+            StandingSplitScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
             )
         }
         composable(
