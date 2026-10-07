@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.piplanner.data.model.Goal
 import com.piplanner.data.repository.PiPlannerRepository
 import com.piplanner.domain.AskAnswerService
+import com.piplanner.domain.AskStandingSplitSeed
 import com.piplanner.domain.FormattingService
 import com.piplanner.domain.GoalValidationService
 import com.piplanner.domain.GrokError
@@ -44,6 +45,7 @@ class AskViewModel @Inject constructor(
     private val askAnswers: AskAnswerService,
     private val formatting: FormattingService,
     private val validation: GoalValidationService,
+    private val standingSplitSeed: AskStandingSplitSeed,
 ) : ViewModel() {
 
     private val clock: () -> Instant = { Instant.now() }
@@ -85,14 +87,17 @@ class AskViewModel @Inject constructor(
         submit()
     }
 
+    /**
+     * Frame 19c — template tap while unavailable opens the matching fallback sheet
+     * without calling Grok (iOS `selectUnavailableTemplate` / `openFallback` parity).
+     */
     fun selectTemplate(template: String) {
-        _uiState.update {
-            it.copy(
-                draftInput = template,
-                phase = AskPhase.Input,
-                statusMessage = null,
-            )
+        _uiState.update { it.copy(draftInput = template, statusMessage = null) }
+        if (_uiState.value.phase == AskPhase.Unavailable || isGrokUnavailable()) {
+            openFallbackForTemplate(template)
+            return
         }
+        submit()
     }
 
     fun submit() {
@@ -144,68 +149,15 @@ class AskViewModel @Inject constructor(
         }
     }
 
+    /** Confirm and Edit share the same sheet-open path (iOS PIP-63 parity). */
     fun confirmProposal() {
         val action = _uiState.value.proposedAction ?: return
-        when (action) {
-            is ProposedAction.Transfer -> {
-                val prefill = StubGrokService.transferPrefill(action) ?: return
-                _uiState.update {
-                    it.copy(
-                        navigateTransfer = prefill,
-                        phase = AskPhase.Input,
-                        proposedAction = null,
-                        plainAnswer = null,
-                    )
-                }
-            }
-            is ProposedAction.ChangeSplit -> {
-                _uiState.update {
-                    it.copy(
-                        navigateStandingSplit = true,
-                        phase = AskPhase.Input,
-                        proposedAction = null,
-                        plainAnswer = null,
-                    )
-                }
-            }
-            is ProposedAction.AddGoal -> {
-                _uiState.update {
-                    it.copy(
-                        phase = AskPhase.GoalForm,
-                        formDraft = GoalFormDraft.fromProposal(action.proposal, now = clock()),
-                        proposedAction = null,
-                        plainAnswer = null,
-                        statusMessage = null,
-                    )
-                }
-            }
-        }
+        openSheet(forAction = action)
     }
 
     fun editProposal() {
-        val action = _uiState.value.proposedAction
-        when (action) {
-            is ProposedAction.AddGoal -> {
-                _uiState.update {
-                    it.copy(
-                        phase = AskPhase.GoalForm,
-                        formDraft = GoalFormDraft.fromProposal(action.proposal, now = clock()),
-                        proposedAction = null,
-                        plainAnswer = null,
-                    )
-                }
-            }
-            else -> {
-                _uiState.update {
-                    it.copy(
-                        phase = AskPhase.Input,
-                        proposedAction = null,
-                        plainAnswer = null,
-                        statusMessage = "Edit your ask and send again.",
-                    )
-                }
-            }
-        }
+        val action = _uiState.value.proposedAction ?: return
+        openSheet(forAction = action)
     }
 
     fun useFormPath() {
@@ -270,7 +222,21 @@ class AskViewModel @Inject constructor(
     }
 
     fun consumeStandingSplitNavigation() {
-        _uiState.update { it.copy(navigateStandingSplit = false) }
+        _uiState.update {
+            it.copy(
+                navigateStandingSplit = false,
+                standingSplitPrefill = null,
+            )
+        }
+    }
+
+    /** Pending ChangeSplit percents for Standing split seed (consumed by nav). */
+    fun takeStandingSplitPrefill(): List<com.piplanner.data.model.StandingSplit>? {
+        val prefill = _uiState.value.standingSplitPrefill
+        if (prefill != null) {
+            _uiState.update { it.copy(standingSplitPrefill = null) }
+        }
+        return prefill
     }
 
     fun formatInr(paisa: Long): String = formatting.formatInrFromPaisa(paisa)
@@ -289,6 +255,111 @@ class AskViewModel @Inject constructor(
                 statusMessage = null,
                 checkedByLabel = StubGrokService.CHECKED_BY_LABEL,
             )
+        }
+    }
+
+    /**
+     * Opens the matching sheet for a proposal (Transfer / Goal form / Standing split).
+     * Used by both Confirm and Edit — never returns to Input-only for Transfer/ChangeSplit.
+     */
+    private fun openSheet(forAction: ProposedAction) {
+        when (forAction) {
+            is ProposedAction.Transfer -> {
+                val prefill = StubGrokService.transferPrefill(forAction) ?: return
+                _uiState.update {
+                    it.copy(
+                        navigateTransfer = prefill,
+                        standingSplitPrefill = null,
+                        phase = AskPhase.Input,
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
+            is ProposedAction.ChangeSplit -> {
+                standingSplitSeed.set(forAction.newSplit)
+                _uiState.update {
+                    it.copy(
+                        navigateStandingSplit = true,
+                        standingSplitPrefill = forAction.newSplit,
+                        phase = AskPhase.Input,
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
+            is ProposedAction.AddGoal -> {
+                _uiState.update {
+                    it.copy(
+                        phase = AskPhase.GoalForm,
+                        formDraft = GoalFormDraft.fromProposal(forAction.proposal, now = clock()),
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Unavailable (19c) template → matching fallback without [GrokService.askQuestion].
+     */
+    private fun openFallbackForTemplate(template: String) {
+        val lowered = template.lowercase()
+        when {
+            StubGrokService.looksLikeTransfer(lowered) -> {
+                _uiState.update {
+                    it.copy(
+                        phase = AskPhase.Unavailable,
+                        navigateTransfer = StubGrokService.DEMO_TRANSFER_PREFILL,
+                        standingSplitPrefill = null,
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
+            StubGrokService.looksLikeAddGoal(lowered) -> {
+                _uiState.update {
+                    it.copy(
+                        phase = AskPhase.GoalForm,
+                        formDraft = GoalFormDraft.fromProposal(
+                            StubGrokService.VACATION_PROPOSAL,
+                            now = clock(),
+                        ),
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
+            StubGrokService.looksLikeChangeSplit(lowered) || lowered.contains("split") -> {
+                standingSplitSeed.set(StubGrokService.DEMO_CHANGE_SPLIT)
+                _uiState.update {
+                    it.copy(
+                        phase = AskPhase.Unavailable,
+                        navigateStandingSplit = true,
+                        standingSplitPrefill = StubGrokService.DEMO_CHANGE_SPLIT,
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
+            else -> {
+                _uiState.update {
+                    it.copy(
+                        phase = AskPhase.GoalForm,
+                        formDraft = GoalFormDraft.blank(remainingShare = 0.2, now = clock()),
+                        proposedAction = null,
+                        plainAnswer = null,
+                        statusMessage = null,
+                    )
+                }
+            }
         }
     }
 
@@ -357,6 +428,8 @@ data class AskUiState(
     val totalSavingsPaisa: Long = 0L,
     val navigateTransfer: TransferAskPrefill? = null,
     val navigateStandingSplit: Boolean = false,
+    /** Optional seed when opening Standing split from a ChangeSplit proposal (19b). */
+    val standingSplitPrefill: List<com.piplanner.data.model.StandingSplit>? = null,
     val suggestionChips: List<String> = StubGrokService.ASK_CHIPS,
     val fallbackTemplates: List<String> = StubGrokService.FALLBACK_TEMPLATES,
 )

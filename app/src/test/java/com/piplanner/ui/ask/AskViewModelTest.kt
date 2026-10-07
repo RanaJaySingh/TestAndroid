@@ -7,10 +7,12 @@ import com.piplanner.data.model.AppState
 import com.piplanner.data.model.StandingSplit
 import com.piplanner.data.repository.PiPlannerRepository
 import com.piplanner.domain.AskAnswerService
+import com.piplanner.domain.AskStandingSplitSeed
 import com.piplanner.domain.DedicatedAccountService
 import com.piplanner.domain.FormattingService
 import com.piplanner.domain.GoalValidationService
 import com.piplanner.domain.GoalsTabService
+import com.piplanner.domain.GrokService
 import com.piplanner.domain.OpeningSplitService
 import com.piplanner.domain.ProposedAction
 import com.piplanner.domain.StubGrokService
@@ -33,11 +35,13 @@ class AskViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private lateinit var persistence: FakePersistence
+    private lateinit var standingSeed: AskStandingSplitSeed
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         persistence = FakePersistence(sampleState())
+        standingSeed = AskStandingSplitSeed()
     }
 
     @After
@@ -62,7 +66,7 @@ class AskViewModelTest {
     fun transferAction_showsProposalThenConfirmPrefillsTransfer() = runTest {
         val vm = viewModel()
         advanceUntilIdle()
-        vm.setDraftInput("Move ₹5,000 from Car to Emergency Fund")
+        vm.setDraftInput("Transfer ₹5,000 from Car to Emergency Fund")
         vm.submit()
         advanceUntilIdle()
 
@@ -80,6 +84,44 @@ class AskViewModelTest {
         assertThat(prefill!!.fromGoalId).isEqualTo(DemoData.DEMO_CAR_GOAL_ID)
         assertThat(prefill.toGoalId).isEqualTo(DemoData.DEMO_EMERGENCY_GOAL_ID)
         assertThat(prefill.amountPaisa).isEqualTo(500_000L)
+    }
+
+    @Test
+    fun editProposal_transferOpensSameSheetAsConfirm() = runTest {
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.setDraftInput("Transfer ₹5,000 from Car to Emergency Fund")
+        vm.submit()
+        advanceUntilIdle()
+        assertThat(vm.uiState.value.phase).isEqualTo(AskPhase.Proposal)
+
+        vm.editProposal()
+        advanceUntilIdle()
+
+        val prefill = vm.uiState.value.navigateTransfer
+        assertThat(prefill).isNotNull()
+        assertThat(prefill!!.amountPaisa).isEqualTo(500_000L)
+        assertThat(vm.uiState.value.phase).isEqualTo(AskPhase.Input)
+        assertThat(vm.uiState.value.proposedAction).isNull()
+        assertThat(vm.uiState.value.statusMessage).isNull()
+    }
+
+    @Test
+    fun editProposal_changeSplitOpensStandingSplitWithSeed() = runTest {
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.setDraftInput("Change my standing split to 50/50")
+        vm.submit()
+        advanceUntilIdle()
+        assertThat(vm.uiState.value.phase).isEqualTo(AskPhase.Proposal)
+
+        vm.editProposal()
+        advanceUntilIdle()
+
+        assertThat(vm.uiState.value.navigateStandingSplit).isTrue()
+        val seed = standingSeed.take()
+        assertThat(seed).isNotNull()
+        assertThat(seed!!.map { it.percentage }).containsExactly(0.5, 0.5)
     }
 
     @Test
@@ -124,6 +166,52 @@ class AskViewModelTest {
     }
 
     @Test
+    fun unavailable_templateTransferOpensPrefillWithoutCallingGrok() = runTest {
+        val tracking = TrackingGrokService(StubGrokService(isUnavailable = true))
+        val vm = viewModel(tracking)
+        advanceUntilIdle()
+        // Init probe + any prior calls; reset counter for the template tap.
+        tracking.askQuestionCalls = 0
+
+        vm.selectTemplate("Transfer ₹5,000 from Car to Emergency Fund")
+        advanceUntilIdle()
+
+        assertThat(tracking.askQuestionCalls).isEqualTo(0)
+        assertThat(vm.uiState.value.navigateTransfer).isNotNull()
+        assertThat(vm.uiState.value.navigateTransfer!!.amountPaisa).isEqualTo(500_000L)
+        assertThat(vm.uiState.value.phase).isEqualTo(AskPhase.Unavailable)
+    }
+
+    @Test
+    fun unavailable_templateVacationOpensGoalFormWithoutCallingGrok() = runTest {
+        val tracking = TrackingGrokService(StubGrokService(isUnavailable = true))
+        val vm = viewModel(tracking)
+        advanceUntilIdle()
+        tracking.askQuestionCalls = 0
+
+        vm.selectTemplate("Add a ₹50,000 vacation by March")
+        advanceUntilIdle()
+
+        assertThat(tracking.askQuestionCalls).isEqualTo(0)
+        assertThat(vm.uiState.value.phase).isEqualTo(AskPhase.GoalForm)
+        assertThat(vm.uiState.value.formDraft.name).isEqualTo("Vacation")
+    }
+
+    @Test
+    fun unavailable_templateStandingOpensStandingWithoutCallingGrok() = runTest {
+        val tracking = TrackingGrokService(StubGrokService(isUnavailable = true))
+        val vm = viewModel(tracking)
+        advanceUntilIdle()
+        tracking.askQuestionCalls = 0
+
+        vm.selectTemplate("Change the standing split")
+        advanceUntilIdle()
+
+        assertThat(tracking.askQuestionCalls).isEqualTo(0)
+        assertThat(vm.uiState.value.navigateStandingSplit).isTrue()
+    }
+
+    @Test
     fun invalidDraft_askOnceThenGoalForm_neverShowsProposal() = runTest {
         val vm = viewModel()
         advanceUntilIdle()
@@ -143,7 +231,7 @@ class AskViewModelTest {
         assertThat(vm.uiState.value.proposedAction).isNull()
     }
 
-    private fun viewModel(grok: StubGrokService = StubGrokService()): AskViewModel {
+    private fun viewModel(grok: GrokService = StubGrokService()): AskViewModel {
         val formatting = FormattingService()
         return AskViewModel(
             repository = PiPlannerRepository(persistence, dispatcher),
@@ -154,6 +242,7 @@ class AskViewModelTest {
             ),
             formatting = formatting,
             validation = GoalValidationService(OpeningSplitService()),
+            standingSplitSeed = standingSeed,
         )
     }
 
@@ -192,5 +281,15 @@ class AskViewModelTest {
         override suspend fun resetDemo() {
             state.value = AppState.EMPTY
         }
+    }
+
+    /** Counts askQuestion calls so unavailable templates can assert no Grok use. */
+    private class TrackingGrokService(
+        private val delegate: StubGrokService,
+    ) : GrokService by delegate {
+        var askQuestionCalls: Int = 0
+
+        override fun askQuestion(query: String) =
+            delegate.askQuestion(query).also { askQuestionCalls += 1 }
     }
 }

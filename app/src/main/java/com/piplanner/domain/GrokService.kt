@@ -218,11 +218,11 @@ class StubGrokService(
             "Why is inflation 7%?",
         )
 
-        /** Frame 19c template sentences when Grok is unavailable. */
+        /** Frame 19c template sentences when Grok is unavailable (iOS AskService parity). */
         val FALLBACK_TEMPLATES: List<String> = listOf(
-            "Move ₹5,000 from Car to Emergency Fund",
+            "Transfer ₹5,000 from Car to Emergency Fund",
             "Add a ₹50,000 vacation by March",
-            "Change my standing split to 50/50",
+            "Change the standing split",
         )
 
         val FOLLOW_UP_QUESTIONS: List<String> = listOf(
