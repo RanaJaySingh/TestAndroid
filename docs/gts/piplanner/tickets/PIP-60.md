@@ -45,7 +45,7 @@ History tab listing all History entries with open vs locked navigation (PRD R16 
 
 ## Base
 
-Rebased onto `main@e95618b` (PIP-56 Transfer merged; prior `d569f5f` / PIP-58). Branch: `PIP-60-history`. PR #14. Keep-both: History + Withdrawal + Transfer wiring in `PiPlannerNav` / `MainTabsScreen`.
+Rebased onto `main@5df557e` (PIP-62 Settings; prior `e95618b` / PIP-56). Branch: `PIP-60-history`. PR #14. Keep-both: History + Withdrawal + Transfer + Settings wiring.
 
 ## Test result
 
