@@ -81,7 +81,7 @@ fun InflationPopup(
         }
     }
 
-    fun finish() {
+    fun finishSheet() {
         val parsed = GoalValidationService.parseInflationPercentInput(rateText)
         if (parsed == null) {
             onRateChange(GoalValidationService.DEFAULT_INFLATION_RATE)
@@ -96,7 +96,7 @@ fun InflationPopup(
         )
 
     PiSheet(
-        onDismissRequest = finish,
+        onDismissRequest = { finishSheet() },
         contentDescription = "Inflation sheet",
     ) {
         Text(
@@ -144,7 +144,7 @@ fun InflationPopup(
                             color = PiPlannerColors.NavyPrimary,
                         )
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = goalFormFieldColors(),
                     supportingText = if (rateError) {
                         {
@@ -210,7 +210,7 @@ fun InflationPopup(
 
         PrimaryCta(
             text = stringResource(R.string.use_this_rate),
-            onClick = finish,
+            onClick = { finishSheet() },
             contentDescription = "Use this rate",
         )
     }

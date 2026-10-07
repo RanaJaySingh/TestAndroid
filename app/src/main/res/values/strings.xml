@@ -267,7 +267,7 @@
     <string name="inflation_title">Inflation</string>
     <string name="inflation_subtitle">Used to estimate an inflation-adjusted target. Default is 5%.</string>
     <string name="inflation_rate_label">Rate</string>
-    <string name="inflation_rate_error">Enter a rate from 0% to 30%.</string>
+    <string name="inflation_rate_error">Enter a rate from 0%% to 30%%.</string>
     <string name="inflation_adjusted_target">Inflation-adjusted target</string>
     <string name="inflation_adjusted_target_short">Adjusted target</string>
     <string name="inflation_live_hint">Updates live as you change the rate.</string>
