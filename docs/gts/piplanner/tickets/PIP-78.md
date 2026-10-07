@@ -1,6 +1,6 @@
 # PIP-78 — Android Update balance / UPI Demo chrome visual
 
-**Status:** Implemented on `PIP-78-update-upi-visual` (rebased onto `1f3bb8fa` / PIP-94; keep-both with PIP-84 Goals Update)  
+**Status:** Implemented on `PIP-78-update-upi-visual` (rebased onto `1a77a3b8` / PIP-90; keep-both with PIP-84 Goals Update)  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-78/android-update-balance-upi-demo-chrome-visual  
 **PRD:** R8 · https://docs.google.com/document/d/18r0wSKMTpePcjCRYypcKbtabghuCyd_TPGWhLEee0AU/edit  
 **Spec:** §5.2 · https://docs.google.com/document/d/1pvhxAPCyLrLIzEBNkiUh5-lOA8y7onLiTgl_eJTnlhk/edit  
