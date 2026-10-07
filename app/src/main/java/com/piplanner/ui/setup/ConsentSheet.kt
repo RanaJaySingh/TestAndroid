@@ -8,16 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,26 +26,33 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.domain.ConsentService
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PiSheetChrome
 import com.piplanner.ui.components.PrimaryCta
 import com.piplanner.ui.components.SecondaryCta
 import com.piplanner.ui.components.SecondaryCtaStyle
 import com.piplanner.ui.theme.PiPlannerColors
 import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTheme
 import com.piplanner.ui.theme.PiPlannerTypography
+import com.piplanner.util.DemoData
 
 /**
- * Consent sheet — design frame 3 (PRD R3 / R4).
- * Hosts Yes/No; navigation to fetched balance (3a) or Update balance (4).
+ * Consent sheet — design frame 3 (PRD R3 / R4 / visual R7).
+ * Paytm-like sheet chrome via [PiSheetChrome]; Yes/No CTAs; navigation to 3a or Update balance (4).
  */
 @Composable
 fun ConsentSheet(
     viewModel: ConsentViewModel,
     onYesFetched: () -> Unit,
     onNo: () -> Unit,
+    /** Setup shows “Step 2 of 3”; Settings (20b) hides the step label. */
+    showsSetupStep: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -68,6 +72,7 @@ fun ConsentSheet(
 
     ConsentSheetContent(
         uiState = uiState,
+        showsSetupStep = showsSetupStep,
         onYes = viewModel::chooseConsentYes,
         onNo = viewModel::chooseConsentNo,
         onDismissError = viewModel::clearError,
@@ -80,82 +85,102 @@ fun ConsentSheetContent(
     onYes: () -> Unit,
     onNo: () -> Unit,
     onDismissError: () -> Unit,
+    showsSetupStep: Boolean = true,
 ) {
+    val helper = uiState.dedicatedAccountTitle?.let { title ->
+        stringResource(R.string.consent_subtitle_named, title)
+    } ?: stringResource(R.string.consent_subtitle)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .background(PiPlannerColors.BackgroundApp)
             .semantics { contentDescription = "Consent sheet" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.consent_step_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.consent_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = uiState.dedicatedAccountTitle?.let { title ->
-                    stringResource(R.string.consent_subtitle_named, title)
-                } ?: stringResource(R.string.consent_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ConsentService.consentBullets.forEach { bullet ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("•", style = MaterialTheme.typography.bodyLarge)
-                    Text(bullet, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
-                onClick = onYes,
-                enabled = !uiState.isWorking,
+        PiSheetChrome(
+            title = stringResource(R.string.consent_title),
+            helper = helper,
+            contentDescription = "Consent sheet chrome",
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "Yes, update automatically" },
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space24),
             ) {
-                if (uiState.isWorking) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .height(20.dp)
-                            .width(20.dp),
-                        strokeWidth = 2.dp,
-                    )
-                } else {
+                if (showsSetupStep) {
                     Text(
-                        text = stringResource(R.string.consent_yes),
-                        fontWeight = FontWeight.SemiBold,
+                        text = stringResource(R.string.consent_step_label),
+                        style = PiPlannerTypography.caption,
+                        color = PiPlannerColors.NavyPrimary,
+                        modifier = Modifier.semantics { contentDescription = "consent.step" },
+                    )
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
+                    modifier = Modifier.semantics { contentDescription = "consent.bullets" },
+                ) {
+                    ConsentService.consentBullets.forEachIndexed { index, bullet ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12),
+                            modifier = Modifier.semantics {
+                                contentDescription = "consent.bullet.$index"
+                            },
+                        ) {
+                            Text(
+                                text = "✓",
+                                style = PiPlannerTypography.body.copy(fontWeight = FontWeight.SemiBold),
+                                color = PiPlannerColors.NavyPrimary,
+                            )
+                            Text(
+                                text = bullet,
+                                style = PiPlannerTypography.body,
+                                color = PiPlannerColors.OnSurface,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
+                    if (uiState.isWorking) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = PiPlannerDimens.Space12),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .semantics {
+                                        contentDescription = "Yes, update automatically"
+                                    },
+                                color = PiPlannerColors.NavyPrimary,
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    } else {
+                        PrimaryCta(
+                            text = stringResource(R.string.consent_yes),
+                            onClick = onYes,
+                            enabled = true,
+                            contentDescription = "Yes, update automatically",
+                        )
+                    }
+
+                    SecondaryCta(
+                        text = stringResource(R.string.consent_no),
+                        onClick = onNo,
+                        enabled = !uiState.isWorking,
+                        style = SecondaryCtaStyle.Outline,
+                        contentDescription = "No, I’ll update it myself",
                     )
                 }
             }
-
-            OutlinedButton(
-                onClick = onNo,
-                enabled = !uiState.isWorking,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "No, I’ll update it myself" },
-            ) {
-                Text(
-                    text = stringResource(R.string.consent_no),
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
     }
 
     uiState.errorMessage?.let { message ->
@@ -174,7 +199,7 @@ fun ConsentSheetContent(
     }
 }
 
-/** Opening balance fetched — design frame 3a (Consent Yes / PIN success). */
+/** Opening balance fetched — design frame 3a (Consent Yes / PIN success); visual R7. */
 @Composable
 fun FetchedBalanceScreen(
     viewModel: ConsentViewModel,
@@ -183,52 +208,73 @@ fun FetchedBalanceScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val balanceLabel = viewModel.formattedBalance(uiState.resolvedBalancePaisa ?: 0L)
 
+    FetchedBalanceContent(
+        balanceLabel = balanceLabel,
+        onContinue = onContinue,
+    )
+}
+
+@Composable
+fun FetchedBalanceContent(
+    balanceLabel: String,
+    onContinue: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(PiPlannerColors.BackgroundApp)
+            .padding(PiPlannerDimens.Space20)
             .semantics { contentDescription = "Fetched balance screen" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space24),
     ) {
-        Text(
-            text = stringResource(R.string.fetched_balance_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(R.string.fetched_balance_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
-                text = stringResource(R.string.balance_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = stringResource(R.string.consent_step_label),
+                style = PiPlannerTypography.caption,
+                color = PiPlannerColors.NavyPrimary,
+                modifier = Modifier.semantics { contentDescription = "fetchedBalance.step" },
             )
             Text(
-                text = balanceLabel,
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.semantics {
-                    contentDescription = "Balance $balanceLabel"
-                },
+                text = stringResource(R.string.fetched_balance_title),
+                style = PiPlannerTypography.title,
+                color = PiPlannerColors.OnSurface,
+                modifier = Modifier.semantics { contentDescription = "fetchedBalance.title" },
+            )
+            Text(
+                text = stringResource(R.string.fetched_balance_subtitle),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
+
+        PiCard(contentDescription = "Fetched balance amount card") {
+            Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+                Text(
+                    text = stringResource(R.string.balance_label),
+                    style = PiPlannerTypography.caption,
+                    color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                )
+                Text(
+                    text = balanceLabel,
+                    style = PiPlannerTypography.amountHero,
+                    color = PiPlannerColors.NavyPrimary,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Balance $balanceLabel"
+                    },
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
-        Button(
+
+        PrimaryCta(
+            text = stringResource(R.string.continue_label),
             onClick = onContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Continue" },
-        ) {
-            Text(
-                text = stringResource(R.string.continue_label),
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
+            contentDescription = "Continue",
+        )
     }
 }
+
 
 /** Update balance sheet (setup) — design frame 4 (Consent No). Paytm-like choice rows (PIP-78). */
 @Composable
@@ -365,5 +411,44 @@ fun WrongPinScreen(
                 contentDescription = "Enter manually",
             )
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Consent · Yes / No")
+@Composable
+private fun ConsentSheetPreview() {
+    PiPlannerTheme {
+        ConsentSheetContent(
+            uiState = ConsentUiState(accounts = DemoData.seededPersonaAccounts()),
+            showsSetupStep = true,
+            onYes = {},
+            onNo = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Consent · Settings 20b")
+@Composable
+private fun ConsentSheetSettingsPreview() {
+    PiPlannerTheme {
+        ConsentSheetContent(
+            uiState = ConsentUiState(accounts = DemoData.seededPersonaAccounts()),
+            showsSetupStep = false,
+            onYes = {},
+            onNo = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Fetched balance 3a · ₹1,00,000")
+@Composable
+private fun FetchedBalancePreview() {
+    PiPlannerTheme {
+        FetchedBalanceContent(
+            balanceLabel = "₹1,00,000",
+            onContinue = {},
+        )
     }
 }
