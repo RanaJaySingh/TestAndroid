@@ -1,6 +1,8 @@
 package com.piplanner.ui.setup
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -30,6 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.domain.ConsentService
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTypography
 
 /**
  * Consent sheet — design frame 3 (PRD R3 / R4).
@@ -221,7 +230,7 @@ fun FetchedBalanceScreen(
     }
 }
 
-/** Update balance sheet (setup) — design frame 4 (Consent No). */
+/** Update balance sheet (setup) — design frame 4 (Consent No). Paytm-like choice rows (PIP-78). */
 @Composable
 fun UpdateBalanceSheet(
     onManually: () -> Unit,
@@ -230,47 +239,44 @@ fun UpdateBalanceSheet(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(PiPlannerColors.BackgroundApp)
+            .padding(PiPlannerDimens.Space20)
             .semantics { contentDescription = "Update balance sheet" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space20),
     ) {
-        Text(
-            text = stringResource(R.string.update_balance_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(R.string.update_balance_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(
-            onClick = onManually,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Manually" },
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
-                text = stringResource(R.string.update_balance_manually),
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.update_balance_title),
+                style = PiPlannerTypography.title,
+                color = PiPlannerColors.OnSurface,
+            )
+            Text(
+                text = stringResource(R.string.update_balance_subtitle),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
-        OutlinedButton(
-            onClick = onBalanceSync,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Balance sync" },
-        ) {
-            Text(
-                text = stringResource(R.string.update_balance_sync),
-                fontWeight = FontWeight.SemiBold,
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
+            UpdateBalanceChoiceRow(
+                title = stringResource(R.string.update_balance_manually),
+                subtitle = stringResource(R.string.update_balance_manually_subtitle),
+                leadingIcon = UpdateBalanceChoiceIcons.Manually,
+                onClick = onManually,
+                contentDescription = "Manually",
+            )
+            UpdateBalanceChoiceRow(
+                title = stringResource(R.string.update_balance_sync),
+                subtitle = stringResource(R.string.update_balance_sync_subtitle),
+                leadingIcon = UpdateBalanceChoiceIcons.BalanceSync,
+                onClick = onBalanceSync,
+                contentDescription = "Balance sync",
             )
         }
         Spacer(modifier = Modifier.weight(1f))
     }
 }
 
-/** Account on another UPI app — design frame 4c (forces manual). */
+/** Account on another UPI app — design frame 4c (forces manual). PIP-78 chrome. */
 @Composable
 fun OtherAppScreen(
     onContinueManual: () -> Unit,
@@ -278,36 +284,33 @@ fun OtherAppScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(PiPlannerColors.BackgroundApp)
+            .padding(PiPlannerDimens.Space20)
             .semantics { contentDescription = "Other UPI app screen" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space20),
     ) {
-        Text(
-            text = stringResource(R.string.other_app_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(R.string.other_app_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Button(
-            onClick = onContinueManual,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Enter balance manually" },
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
-                text = stringResource(R.string.other_app_cta),
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.other_app_title),
+                style = PiPlannerTypography.title,
+                color = PiPlannerColors.OnSurface,
+            )
+            Text(
+                text = stringResource(R.string.other_app_body),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
+        PrimaryCta(
+            text = stringResource(R.string.other_app_cta),
+            onClick = onContinueManual,
+            contentDescription = "Enter balance manually",
+        )
     }
 }
 
-/** Wrong PIN — design frames 4d / 4e (retry or manual). */
+/** Wrong PIN — design frames 4d / 4e (retry or manual). PIP-78 chrome (no logic change). */
 @Composable
 fun WrongPinScreen(
     viewModel: ConsentViewModel,
@@ -318,48 +321,48 @@ fun WrongPinScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(PiPlannerColors.BackgroundApp)
+            .padding(PiPlannerDimens.Space20)
             .semantics { contentDescription = "Wrong PIN screen" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space20),
     ) {
-        Text(
-            text = stringResource(R.string.wrong_pin_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = uiState.errorMessage
-                ?: stringResource(R.string.wrong_pin_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Button(
-            onClick = {
-                viewModel.retryPin()
-                onRetry()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Try again" },
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
-                text = stringResource(R.string.wrong_pin_retry),
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.wrong_pin_title),
+                style = PiPlannerTypography.title,
+                color = PiPlannerColors.Destructive,
+            )
+            Text(
+                text = uiState.errorMessage
+                    ?: stringResource(R.string.wrong_pin_body),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
-        OutlinedButton(
-            onClick = {
-                viewModel.clearPin()
-                onManual()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Enter manually" },
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
         ) {
-            Text(
+            UPIPinDots(filledCount = 4, showsError = true)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
+            PrimaryCta(
+                text = stringResource(R.string.wrong_pin_retry),
+                onClick = {
+                    viewModel.retryPin()
+                    onRetry()
+                },
+                contentDescription = "Try again",
+            )
+            SecondaryCta(
                 text = stringResource(R.string.wrong_pin_manual),
-                fontWeight = FontWeight.SemiBold,
+                onClick = {
+                    viewModel.clearPin()
+                    onManual()
+                },
+                style = SecondaryCtaStyle.Outline,
+                contentDescription = "Enter manually",
             )
         }
     }
