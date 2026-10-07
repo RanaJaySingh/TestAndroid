@@ -7,14 +7,24 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.piplanner.ui.AppViewModel
-import com.piplanner.ui.goals.GoalsTabPlaceholder
+import androidx.navigation.navArgument
+import com.piplanner.R
 import com.piplanner.data.model.Goal
+import com.piplanner.ui.AppViewModel
+import com.piplanner.ui.goals.GoalActionStubScreen
+import com.piplanner.ui.goals.GoalDetailScreen
+import com.piplanner.ui.goals.GoalDetailViewModel
+import com.piplanner.ui.goals.GoalEditScreen
+import com.piplanner.ui.goals.GoalEditViewModel
+import com.piplanner.ui.goals.GoalsTabPlaceholder
 import com.piplanner.ui.setup.AccountsScreen
 import com.piplanner.ui.setup.AccountsViewModel
 import com.piplanner.ui.setup.ConsentSheet
@@ -46,6 +56,15 @@ object PiPlannerRoutes {
     const val GOAL_CHAT: String = "goal_chat"
     const val OPENING_SPLIT: String = "opening_split"
     const val GOALS_TAB: String = "goals_tab"
+    const val GOAL_DETAIL: String = "goal_detail/{goalId}"
+    const val GOAL_EDIT: String = "goal_edit/{goalId}"
+    const val TRANSFER: String = "transfer/{goalId}"
+    const val DELETE_GOAL: String = "delete_goal/{goalId}"
+
+    fun goalDetail(goalId: String): String = "goal_detail/$goalId"
+    fun goalEdit(goalId: String): String = "goal_edit/$goalId"
+    fun transfer(goalId: String): String = "transfer/$goalId"
+    fun deleteGoal(goalId: String): String = "delete_goal/$goalId"
 }
 
 /**
@@ -232,7 +251,76 @@ fun PiPlannerNavHost(
             )
         }
         composable(PiPlannerRoutes.GOALS_TAB) {
-            GoalsTabPlaceholder()
+            val appState by appViewModel.uiState.collectAsStateWithLifecycle()
+            GoalsTabPlaceholder(
+                goals = appState.goals,
+                onOpenGoal = { goalId ->
+                    navController.navigate(PiPlannerRoutes.goalDetail(goalId))
+                },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.GOAL_DETAIL,
+            arguments = listOf(
+                navArgument(GoalDetailViewModel.NAV_ARG_GOAL_ID) { type = NavType.StringType },
+            ),
+        ) {
+            val viewModel: GoalDetailViewModel = hiltViewModel()
+            GoalDetailScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onTransfer = { goalId ->
+                    navController.navigate(PiPlannerRoutes.transfer(goalId))
+                },
+                onEdit = { goalId ->
+                    navController.navigate(PiPlannerRoutes.goalEdit(goalId))
+                },
+                onDelete = { goalId ->
+                    navController.navigate(PiPlannerRoutes.deleteGoal(goalId))
+                },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.GOAL_EDIT,
+            arguments = listOf(
+                navArgument(GoalDetailViewModel.NAV_ARG_GOAL_ID) { type = NavType.StringType },
+            ),
+        ) {
+            val viewModel: GoalEditViewModel = hiltViewModel()
+            GoalEditScreen(
+                viewModel = viewModel,
+                validation = viewModel.goalValidationService,
+                onBack = { navController.popBackStack() },
+                onSavedNavigateBack = {
+                    navController.popBackStack()
+                },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.TRANSFER,
+            arguments = listOf(
+                navArgument(GoalDetailViewModel.NAV_ARG_GOAL_ID) { type = NavType.StringType },
+            ),
+        ) {
+            GoalActionStubScreen(
+                title = stringResource(R.string.transfer_stub_title),
+                body = stringResource(R.string.transfer_stub_body),
+                contentDescription = "Transfer stub",
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.DELETE_GOAL,
+            arguments = listOf(
+                navArgument(GoalDetailViewModel.NAV_ARG_GOAL_ID) { type = NavType.StringType },
+            ),
+        ) {
+            GoalActionStubScreen(
+                title = stringResource(R.string.delete_stub_title),
+                body = stringResource(R.string.delete_stub_body),
+                contentDescription = "Delete goal stub",
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }

@@ -75,6 +75,12 @@ class ModelSerializationTest {
                 StandingSplit(goalId = "goal-ef", percentage = 0.4),
             ),
             hasCompletedSetup = true,
+            heldGoalChanges = listOf(
+                HeldGoalChange(
+                    goalId = "goal-car",
+                    savedAt = "2026-06-01T12:00:00Z",
+                ),
+            ),
         )
 
         val encoded = serializer.encode(state)
@@ -85,6 +91,8 @@ class ModelSerializationTest {
         assertThat(decoded.goals[0].inflationRate).isEqualTo(0.07)
         assertThat(decoded.history[0].type).isEqualTo(HistoryEntryType.OpeningBalance)
         assertThat(decoded.standingSplits.sumOf { it.percentage }).isEqualTo(1.0)
+        assertThat(decoded.heldGoalChanges).hasSize(1)
+        assertThat(decoded.heldGoalChanges[0].goalId).isEqualTo("goal-car")
     }
 
     @Test
@@ -96,6 +104,7 @@ class ModelSerializationTest {
         assertThat(decoded.goals).isEmpty()
         assertThat(decoded.history).isEmpty()
         assertThat(decoded.standingSplits).isEmpty()
+        assertThat(decoded.heldGoalChanges).isEmpty()
         assertThat(decoded.hasCompletedSetup).isFalse()
     }
 
