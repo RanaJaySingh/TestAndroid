@@ -32,6 +32,8 @@
 
 ## Branch
 
-`PIP-52-standing-split` rebased onto `7830826` (main after PIP-46 Goals tab).
+`PIP-52-standing-split` rebased onto `f2e95c2` (main after PIP-48 Sync/Update + credit entry).
+
+Conflict merge retained PIP-52 Standing Split API plus PIP-48 `percentagesForNextCredit` / credit + withdrawal nav.
 
 Entry point is Goals tab → Standing split (placeholder removed with PIP-46).
