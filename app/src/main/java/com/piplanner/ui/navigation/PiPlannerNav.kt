@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -24,7 +23,7 @@ import com.piplanner.ui.goals.GoalDetailScreen
 import com.piplanner.ui.goals.GoalDetailViewModel
 import com.piplanner.ui.goals.GoalEditScreen
 import com.piplanner.ui.goals.GoalEditViewModel
-import com.piplanner.ui.goals.GoalsTabPlaceholder
+import com.piplanner.ui.settings.SettingsScreen
 import com.piplanner.ui.setup.AccountsScreen
 import com.piplanner.ui.setup.AccountsViewModel
 import com.piplanner.ui.setup.ConsentSheet
@@ -60,6 +59,7 @@ object PiPlannerRoutes {
     const val GOAL_EDIT: String = "goal_edit/{goalId}"
     const val TRANSFER: String = "transfer/{goalId}"
     const val DELETE_GOAL: String = "delete_goal/{goalId}"
+    const val SETTINGS: String = "settings"
 
     fun goalDetail(goalId: String): String = "goal_detail/$goalId"
     fun goalEdit(goalId: String): String = "goal_edit/$goalId"
@@ -71,7 +71,7 @@ object PiPlannerRoutes {
  * App navigation host.
  * First-run / post–Reset → Welcome (PIP-36); CTA → Accounts (PIP-38);
  * Consent + balance entry (PIP-40) → Goal chat/form (PIP-42) → Opening split (PIP-44);
- * setup complete → Goals tab.
+ * setup complete → Goals tab (PIP-46) with Goal detail/edit (PIP-50).
  */
 @Composable
 fun PiPlannerNavHost(
@@ -251,11 +251,12 @@ fun PiPlannerNavHost(
             )
         }
         composable(PiPlannerRoutes.GOALS_TAB) {
-            val appState by appViewModel.uiState.collectAsStateWithLifecycle()
-            GoalsTabPlaceholder(
-                goals = appState.goals,
+            MainTabsScreen(
                 onOpenGoal = { goalId ->
                     navController.navigate(PiPlannerRoutes.goalDetail(goalId))
+                },
+                onOpenSettings = {
+                    navController.navigate(PiPlannerRoutes.SETTINGS)
                 },
             )
         }
@@ -319,6 +320,11 @@ fun PiPlannerNavHost(
                 title = stringResource(R.string.delete_stub_title),
                 body = stringResource(R.string.delete_stub_body),
                 contentDescription = "Delete goal stub",
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(PiPlannerRoutes.SETTINGS) {
+            SettingsScreen(
                 onBack = { navController.popBackStack() },
             )
         }
