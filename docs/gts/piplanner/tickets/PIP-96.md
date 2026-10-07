@@ -52,12 +52,13 @@ Started from `1f3bb8fa926265df96f4324af374522d1b2da7db` (main after PIP-94). Tou
 1. Onto `1a77a3b87855d3b6dfa548db903d9d4503396f56` (PIP-90 MERGED) — clean.
 2. Onto `4552dca40dc3e4802d9141ed33b133e3bdb18f3c` (PIP-78 MERGED) — clean.
 3. Onto `5f938820da093121a2ccdcdb126c01d65c7a53a5` (PIP-92 MERGED) — clean.
-4. Onto `6f5ab4b7a54ceab331f079877a81b1ee0fb4c16f` (PIP-86 MERGED) — clean. Do not treat `5f938820` / `845d0118` as tip-current.
+4. Onto `6f5ab4b7a54ceab331f079877a81b1ee0fb4c16f` (PIP-86 MERGED) — clean.
+5. Onto `7aa7299159142612818b6c28152b1181211ec494` (PIP-76 MERGED) — clean. Do not treat `6f5ab4b7` / `9e84e960` as tip-current.
 
 ## Test results
 
 `./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (Ask + shared-component suites green).
-Post-rebase onto `6f5ab4b7`: awaiting GitHub CI 2/2 on tip-current head.
+Post-rebase onto `7aa72991`: local assemble required on new head before pr_ready.
 
 ## Out of scope
 
