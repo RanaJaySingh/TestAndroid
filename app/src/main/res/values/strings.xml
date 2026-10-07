@@ -188,17 +188,19 @@
     <string name="settings_linked_accounts_subtitle">Accounts available in this demo. Only Dedicated savings participates in Sync and credits.</string>
     <string name="settings_no_accounts">No accounts linked yet.</string>
     <string name="settings_auto_updates_title">Automatic balance updates</string>
-    <string name="settings_auto_updates_on_body">On — Goals shows Sync so PiPlanner can check the dedicated balance.</string>
-    <string name="settings_auto_updates_off_body">Off — Goals shows Update balance for manual or demo PIN entry.</string>
+    <string name="settings_auto_updates_on_body">PiPlanner reads this balance when you tap Sync.</string>
+    <string name="settings_auto_updates_off_body">Update balance replaces Sync. Type credits yourself, or use Balance sync with your UPI PIN.</string>
     <string name="settings_auto_updates_account">Applies to %1$s</string>
+    <string name="settings_untyped_gap_hint">Anything not typed in the meantime arrives as one amount on the next Sync.</string>
     <string name="settings_consent_on">On</string>
     <string name="settings_consent_off">Off</string>
+    <string name="settings_demo_group">Demo</string>
     <string name="settings_reset_title">Reset demo</string>
-    <string name="settings_reset_body">Clears goals, history, and standing split, then returns to Welcome so you can rerun the pitch.</string>
+    <string name="settings_reset_body">Clears goals and history and returns to Welcome.</string>
     <string name="settings_reset_cta">Reset demo</string>
-    <string name="settings_reset_confirm_title">Reset this demo?</string>
-    <string name="settings_reset_confirm_body">Goals, history, accounts, and standing split will be cleared. You’ll return to Welcome.</string>
-    <string name="settings_reset_confirm">Reset</string>
+    <string name="settings_reset_confirm_title">Reset demo?</string>
+    <string name="settings_reset_confirm_body">Clears goals and history and returns to Welcome.</string>
+    <string name="settings_reset_confirm">Reset demo</string>
     <string name="settings_error_title">Something went wrong</string>
 
     <string name="history_tab_title">History</string>
