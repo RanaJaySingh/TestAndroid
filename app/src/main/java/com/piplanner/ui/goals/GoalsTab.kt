@@ -38,6 +38,7 @@ fun GoalsTab(
     onOpenCreditEntry: (String) -> Unit,
     onOpenWithdrawal: (previousPaisa: Long, newPaisa: Long, isTyped: Boolean) -> Unit,
     onOpenStandingSplit: () -> Unit = {},
+    onOpenTransfer: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -84,6 +85,7 @@ fun GoalsTab(
         onSettingsClick = viewModel::openSettings,
         onStandingSplitClick = onOpenStandingSplit,
         onRecordWithdrawalClick = viewModel::openRecordWithdrawal,
+        onTransferClick = onOpenTransfer,
         onDismissError = viewModel::clearError,
         onDismissSync = viewModel::dismissSyncSheet,
         onConfirmSync = viewModel::performSync,
@@ -109,6 +111,7 @@ fun GoalsTabContent(
     onSettingsClick: () -> Unit,
     onStandingSplitClick: () -> Unit = {},
     onRecordWithdrawalClick: () -> Unit = {},
+    onTransferClick: () -> Unit = {},
     onDismissError: () -> Unit,
     onDismissSync: () -> Unit,
     onConfirmSync: () -> Unit,
@@ -189,13 +192,25 @@ fun GoalsTabContent(
                             contentDescription = "Your goals section"
                         },
                     )
-                    TextButton(
-                        onClick = onStandingSplitClick,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Open standing split"
-                        },
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(stringResource(R.string.standing_split_title))
+                        TextButton(
+                            onClick = onStandingSplitClick,
+                            modifier = Modifier.semantics {
+                                contentDescription = "Open standing split"
+                            },
+                        ) {
+                            Text(stringResource(R.string.standing_split_title))
+                        }
+                        TextButton(
+                            onClick = onTransferClick,
+                            modifier = Modifier.semantics {
+                                contentDescription = "Open transfer"
+                            },
+                        ) {
+                            Text(stringResource(R.string.transfer_open))
+                        }
                     }
                     TextButton(
                         onClick = onRecordWithdrawalClick,

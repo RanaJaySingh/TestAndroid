@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.piplanner.R
 
 /**
- * Stub destinations for Transfer / Delete from Goal detail.
- * Full flows land in later tickets; nav targets exist so detail buttons wire correctly.
+ * Stub destinations for flows not yet fully implemented (e.g. Withdrawal).
+ * Transfer / Delete use real screens once their tickets land.
  */
 @Composable
 fun GoalActionStubScreen(
