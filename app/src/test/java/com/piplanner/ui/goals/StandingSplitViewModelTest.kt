@@ -84,7 +84,7 @@ class StandingSplitViewModelTest {
         assertThat(persisted.goals.first { it.id == DemoData.DEMO_CAR_GOAL_ID }.shareOfNewCredits)
             .isEqualTo(0.70)
 
-        val nextCredit = StandingSplitService().fractionsForNextCredit(persisted)
+        val nextCredit = StandingSplitService(OpeningSplitService()).fractionsForNextCredit(persisted)
         assertThat(nextCredit[DemoData.DEMO_CAR_GOAL_ID]?.toDouble()).isEqualTo(0.70)
         assertThat(nextCredit[DemoData.DEMO_EMERGENCY_GOAL_ID]?.toDouble()).isEqualTo(0.30)
     }
