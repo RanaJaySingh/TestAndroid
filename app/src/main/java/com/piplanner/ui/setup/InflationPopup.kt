@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,104 +16,131 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.piplanner.R
 import com.piplanner.domain.GoalValidationService
+import com.piplanner.ui.components.LightBlueChip
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PiSheet
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTypography
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
 /**
- * Inflation rate popup — design frame 7. Default 7% with live adjusted target.
+ * Inflation rate sheet — design frame 7. Default 7% with live adjusted target.
+ * Visual parity (PIP-80): PiSheet chrome, ± stepper, live targets, “Use this rate” CTA.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InflationPopup(
     inflationRate: Double,
-    targetPaisa: Long,
-    startDate: LocalDate,
-    endDate: LocalDate,
+    @Suppress("UNUSED_PARAMETER") targetPaisa: Long,
+    @Suppress("UNUSED_PARAMETER") startDate: LocalDate,
+    @Suppress("UNUSED_PARAMETER") endDate: LocalDate,
     formattedAdjustedTarget: String,
     onRateChange: (Double) -> Unit,
     onDone: () -> Unit,
 ) {
+    // targetPaisa / dates kept for call-site API parity; live ₹ is preformatted by the host.
     val percent = (inflationRate * 100.0).roundToInt().coerceIn(0, 30)
 
-    Dialog(onDismissRequest = onDone) {
+    PiSheet(
+        onDismissRequest = onDone,
+        contentDescription = "Inflation sheet",
+    ) {
+        Text(
+            text = stringResource(R.string.inflation_title),
+            style = PiPlannerTypography.title,
+            fontWeight = FontWeight.SemiBold,
+            color = PiPlannerColors.OnSurface,
+        )
+        Text(
+            text = stringResource(R.string.inflation_subtitle),
+            style = PiPlannerTypography.body,
+            color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+        )
+
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12),
+            modifier = Modifier.semantics { contentDescription = "inflation.stepper" },
         ) {
             Text(
-                text = stringResource(R.string.inflation_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.inflation_rate_label),
+                style = PiPlannerTypography.caption,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
-            Text(
-                text = stringResource(R.string.inflation_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.inflation_rate_label),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(R.string.percent_value, percent),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Inflation $percent percent"
-                        },
-                    )
-                }
-                Slider(
-                    value = percent.toFloat(),
-                    onValueChange = { onRateChange(it.roundToInt().coerceIn(0, 30) / 100.0) },
-                    valueRange = 0f..30f,
-                    steps = 29,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Inflation rate"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
+            ) {
+                LightBlueChip(
+                    label = "−",
+                    selected = false,
+                    onClick = {
+                        val next = (percent - 1).coerceIn(0, 30)
+                        onRateChange(next / 100.0)
                     },
+                    contentDescription = "Decrease inflation",
+                )
+                Text(
+                    text = stringResource(R.string.percent_value, percent),
+                    style = PiPlannerTypography.amountHero,
+                    fontWeight = FontWeight.Bold,
+                    color = PiPlannerColors.NavyPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .widthIn(min = 72.dp)
+                        .semantics { contentDescription = "Inflation $percent percent" },
+                )
+                LightBlueChip(
+                    label = "+",
+                    selected = false,
+                    onClick = {
+                        val next = (percent + 1).coerceIn(0, 30)
+                        onRateChange(next / 100.0)
+                    },
+                    contentDescription = "Increase inflation",
                 )
             }
+        }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        PiCard(contentDescription = "Adjusted target") {
+            Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
                 Text(
-                    text = stringResource(R.string.inflation_adjusted_target),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = stringResource(R.string.inflation_adjusted_target_short),
+                    style = PiPlannerTypography.caption,
+                    color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                 )
                 Text(
                     text = formattedAdjustedTarget,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = PiPlannerTypography.amountHero,
                     fontWeight = FontWeight.Bold,
+                    color = PiPlannerColors.NavyPrimary,
+                    maxLines = 1,
                     modifier = Modifier.semantics {
                         contentDescription = "Adjusted target $formattedAdjustedTarget"
                     },
                 )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onDone,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Done" },
-            ) {
-                Text(stringResource(R.string.done))
+                Text(
+                    text = stringResource(R.string.inflation_live_hint),
+                    style = PiPlannerTypography.caption,
+                    color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                )
             }
         }
+
+        Spacer(modifier = Modifier.height(PiPlannerDimens.Space8))
+
+        PrimaryCta(
+            text = stringResource(R.string.use_this_rate),
+            onClick = onDone,
+            contentDescription = "Use this rate",
+        )
     }
 }
 

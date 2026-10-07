@@ -1,5 +1,6 @@
 package com.piplanner.ui.setup
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,14 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,9 +35,17 @@ import com.piplanner.R
 import com.piplanner.data.model.Goal
 import com.piplanner.data.model.HistoryEntry
 import com.piplanner.domain.HistoryService
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTypography
 
 /**
  * Opening split screen — design frames 8 (multi-goal) and 8b (single-goal).
+ * Visual parity (PIP-80): goal rows, %, Lock this split PrimaryCta (≠100% vs 100%).
  * Read-only History path (12a) uses [onBack] + [HistoryService.ORIGINAL_AMOUNTS_CAPTION].
  */
 @Composable
@@ -92,39 +100,39 @@ fun OpeningSplitContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+            .padding(PiPlannerDimens.Space20),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space20),
     ) {
         if (onBack != null) {
-            TextButton(
+            SecondaryCta(
+                text = stringResource(R.string.back),
                 onClick = onBack,
-                modifier = Modifier.semantics {
-                    contentDescription = "Back from opening balance history"
-                },
-            ) {
-                Text(stringResource(R.string.back))
-            }
+                fillMaxWidth = false,
+                style = SecondaryCtaStyle.Text,
+                contentDescription = "Back from opening balance history",
+            )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
                 text = if (uiState.isReadOnly) {
                     stringResource(R.string.opening_split_title_readonly)
                 } else {
                     stringResource(R.string.opening_split_title)
                 },
-                style = MaterialTheme.typography.titleLarge,
+                style = PiPlannerTypography.title,
                 fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnBackground,
             )
             Text(
                 text = if (uiState.isReadOnly) {
-                    // Frame 12a / BR-3 History read-only copy
                     HistoryService.ORIGINAL_AMOUNTS_CAPTION
                 } else {
                     stringResource(R.string.opening_split_subtitle)
                 },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                 modifier = if (uiState.isReadOnly) {
                     Modifier.semantics {
                         contentDescription = HistoryService.ORIGINAL_AMOUNTS_CAPTION
@@ -135,23 +143,29 @@ fun OpeningSplitContent(
             )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.opening_balance_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = uiState.formattedOpeningBalance,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.semantics {
-                    contentDescription = "Opening balance ${uiState.formattedOpeningBalance}"
-                },
-            )
+        PiCard(
+            contentDescription = "Opening balance ${uiState.formattedOpeningBalance}",
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8 / 2)) {
+                Text(
+                    text = stringResource(R.string.opening_balance_label),
+                    style = PiPlannerTypography.caption,
+                    color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                )
+                Text(
+                    text = uiState.formattedOpeningBalance,
+                    style = PiPlannerTypography.amountHero,
+                    fontWeight = FontWeight.Bold,
+                    color = PiPlannerColors.NavyPrimary,
+                    maxLines = 1,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Opening balance ${uiState.formattedOpeningBalance}"
+                    },
+                )
+            }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
             uiState.goals.forEach { goal ->
                 GoalSplitRow(
                     goal = goal,
@@ -166,41 +180,40 @@ fun OpeningSplitContent(
 
         Text(
             text = uiState.statusMessage,
-            style = MaterialTheme.typography.bodyMedium,
+            style = PiPlannerTypography.body,
             color = if (uiState.canLock || uiState.isReadOnly) {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                PiPlannerColors.OnSurface.copy(alpha = 0.72f)
             } else {
-                MaterialTheme.colorScheme.tertiary
+                PiPlannerColors.Behind
             },
+            modifier = Modifier.semantics { contentDescription = uiState.statusMessage },
         )
 
         if (!uiState.isReadOnly) {
-            Button(
-                onClick = onLockClick,
-                enabled = uiState.canLock,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = "Lock this split"
-                    },
-            ) {
-                if (uiState.isLocking) {
+            if (uiState.isLocking) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = PiPlannerDimens.Space12),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
                     CircularProgressIndicator(
-                        modifier = Modifier
-                            .height(20.dp)
-                            .width(20.dp),
+                        modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.lock_this_split),
-                        fontWeight = FontWeight.SemiBold,
+                        color = PiPlannerColors.NavyPrimary,
                     )
                 }
+            } else {
+                PrimaryCta(
+                    text = stringResource(R.string.lock_this_split),
+                    onClick = onLockClick,
+                    enabled = uiState.canLock,
+                    contentDescription = "Lock this split",
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(PiPlannerDimens.Space8))
     }
 
     if (uiState.showConfirmLock) {
@@ -244,76 +257,84 @@ private fun GoalSplitRow(
     isReadOnly: Boolean,
     onPercentChange: (Int) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = goal.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = amountLabel,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
+    PiCard(contentDescription = "${goal.name} split row") {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = goal.name,
+                    style = PiPlannerTypography.body,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PiPlannerColors.OnSurface,
+                )
+                Text(
+                    text = amountLabel,
+                    style = PiPlannerTypography.body,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PiPlannerColors.NavyPrimary,
+                )
+            }
 
-        when {
-            isSingleGoal -> {
-                Text(
-                    text = "100%",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.semantics {
-                        contentDescription = "${goal.name} automatically assigned 100 percent"
-                    },
-                )
-            }
-            isReadOnly -> {
-                Text(
-                    text = "$percent%",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.semantics {
-                        contentDescription = "${goal.name} $percent percent, locked"
-                    },
-                )
-            }
-            else -> {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
+            when {
+                isSingleGoal -> {
                     Text(
-                        text = stringResource(R.string.share_label),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = "100%",
+                        style = PiPlannerTypography.title,
+                        fontWeight = FontWeight.Medium,
+                        color = PiPlannerColors.NavyPrimary,
+                        modifier = Modifier.semantics {
+                            contentDescription = "${goal.name} automatically assigned 100 percent"
+                        },
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = percent.toString(),
-                            onValueChange = { raw ->
-                                val digits = raw.filter { it.isDigit() }
-                                onPercentChange(digits.toIntOrNull() ?: 0)
-                            },
-                            modifier = Modifier
-                                .width(88.dp)
-                                .semantics {
-                                    contentDescription = "${goal.name} percentage"
-                                },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        )
+                }
+                isReadOnly -> {
+                    Text(
+                        text = "$percent%",
+                        style = PiPlannerTypography.title,
+                        fontWeight = FontWeight.Medium,
+                        color = PiPlannerColors.NavyPrimary,
+                        modifier = Modifier.semantics {
+                            contentDescription = "${goal.name} $percent percent, locked"
+                        },
+                    )
+                }
+                else -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
                         Text(
-                            text = "%",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(start = 8.dp),
+                            text = stringResource(R.string.share_label),
+                            style = PiPlannerTypography.caption,
+                            color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = percent.toString(),
+                                onValueChange = { raw ->
+                                    val digits = raw.filter { it.isDigit() }
+                                    onPercentChange(digits.toIntOrNull() ?: 0)
+                                },
+                                modifier = Modifier
+                                    .width(88.dp)
+                                    .semantics {
+                                        contentDescription = "${goal.name} percentage"
+                                    },
+                                singleLine = true,
+                                colors = goalFormFieldColors(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            )
+                            Text(
+                                text = "%",
+                                style = PiPlannerTypography.title,
+                                color = PiPlannerColors.OnSurface,
+                                modifier = Modifier.padding(start = PiPlannerDimens.Space8),
+                            )
+                        }
                     }
                 }
             }
