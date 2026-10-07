@@ -36,7 +36,7 @@ fun GoalsTab(
     onOpenGoal: (String) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenCreditEntry: (String) -> Unit,
-    onOpenWithdrawalStub: () -> Unit,
+    onOpenWithdrawal: (previousPaisa: Long, newPaisa: Long, isTyped: Boolean) -> Unit,
     onOpenStandingSplit: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,11 +64,15 @@ fun GoalsTab(
         onOpenCreditEntry(entryId)
     }
 
-    LaunchedEffect(uiState.navigateToWithdrawalStub) {
-        if (uiState.navigateToWithdrawalStub) {
-            viewModel.consumeWithdrawalNavigation()
-            onOpenWithdrawalStub()
-        }
+    LaunchedEffect(
+        uiState.navigateToWithdrawalPreviousPaisa,
+        uiState.navigateToWithdrawalNewPaisa,
+    ) {
+        val previous = uiState.navigateToWithdrawalPreviousPaisa ?: return@LaunchedEffect
+        val newBalance = uiState.navigateToWithdrawalNewPaisa ?: return@LaunchedEffect
+        val isTyped = uiState.navigateToWithdrawalIsTyped
+        viewModel.consumeWithdrawalNavigation()
+        onOpenWithdrawal(previous, newBalance, isTyped)
     }
 
     GoalsTabContent(
@@ -79,16 +83,19 @@ fun GoalsTab(
         onGoalClick = { goalId -> viewModel.selectGoal(goalId) },
         onSettingsClick = viewModel::openSettings,
         onStandingSplitClick = onOpenStandingSplit,
+        onRecordWithdrawalClick = viewModel::openRecordWithdrawal,
         onDismissError = viewModel::clearError,
         onDismissSync = viewModel::dismissSyncSheet,
         onConfirmSync = viewModel::performSync,
         onContinueCreditFromSync = viewModel::openCreditEntryFromSheet,
-        onContinueWithdrawalFromSync = viewModel::continueToWithdrawalStub,
+        onContinueWithdrawalFromSync = viewModel::continueToWithdrawal,
         onDismissUpdateBalance = viewModel::dismissUpdateBalanceSheet,
         onApplyManualBalance = viewModel::applyManualBalance,
         onContinueCreditFromUpdate = viewModel::openCreditEntryFromSheet,
-        onContinueWithdrawalFromUpdate = viewModel::continueToWithdrawalStub,
+        onContinueWithdrawalFromUpdate = viewModel::continueToWithdrawal,
         onAssignNow = viewModel::openCreditEntryFromBanner,
+        onDismissRecordWithdrawal = viewModel::dismissRecordWithdrawalSheet,
+        onContinueRecordWithdrawal = viewModel::continueRecordWithdrawal,
     )
 }
 
@@ -101,6 +108,7 @@ fun GoalsTabContent(
     onGoalClick: (String) -> Unit,
     onSettingsClick: () -> Unit,
     onStandingSplitClick: () -> Unit = {},
+    onRecordWithdrawalClick: () -> Unit = {},
     onDismissError: () -> Unit,
     onDismissSync: () -> Unit,
     onConfirmSync: () -> Unit,
@@ -111,6 +119,8 @@ fun GoalsTabContent(
     onContinueCreditFromUpdate: () -> Unit,
     onContinueWithdrawalFromUpdate: () -> Unit,
     onAssignNow: () -> Unit,
+    onDismissRecordWithdrawal: () -> Unit = {},
+    onContinueRecordWithdrawal: (Long) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -162,17 +172,6 @@ fun GoalsTabContent(
                 onAction = onBalanceAction,
             )
 
-            uiState.withdrawalStubMessage?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Withdrawal stub message"
-                    },
-                )
-            }
-
             when {
                 uiState.isLoading && !uiState.hasGoals -> {
                     CircularProgressIndicator(
@@ -197,6 +196,14 @@ fun GoalsTabContent(
                         },
                     ) {
                         Text(stringResource(R.string.standing_split_title))
+                    }
+                    TextButton(
+                        onClick = onRecordWithdrawalClick,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Record a withdrawal"
+                        },
+                    ) {
+                        Text(stringResource(R.string.withdrawal_record_cta))
                     }
                     uiState.goals.forEach { goal ->
                         GoalCard(
@@ -254,6 +261,15 @@ fun GoalsTabContent(
             onContinueToCreditEntry = onContinueCreditFromUpdate,
             onContinueToWithdrawal = onContinueWithdrawalFromUpdate,
             onDismiss = onDismissUpdateBalance,
+        )
+    }
+
+    if (uiState.showRecordWithdrawalSheet) {
+        RecordWithdrawalSheet(
+            currentFormatted = uiState.formattedTotalSavings,
+            currentBalancePaisa = uiState.totalSavingsPaisa,
+            onContinue = onContinueRecordWithdrawal,
+            onDismiss = onDismissRecordWithdrawal,
         )
     }
 

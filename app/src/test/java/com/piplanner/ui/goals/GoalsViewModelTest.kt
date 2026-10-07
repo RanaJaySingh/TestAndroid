@@ -182,7 +182,15 @@ class GoalsViewModelTest {
         val state = viewModel.uiState.value
         assertThat(state.canContinueToWithdrawal).isTrue()
         assertThat(state.withdrawalShortfallPaisa).isEqualTo(1_500_000L)
+        assertThat(state.withdrawalPreviousBalancePaisa).isEqualTo(10_000_000L)
+        assertThat(state.withdrawalNewBalancePaisa).isEqualTo(8_500_000L)
         assertThat(state.createdCreditEntryId).isNull()
+
+        viewModel.continueToWithdrawal()
+        advanceUntilIdle()
+        val after = viewModel.uiState.value
+        assertThat(after.navigateToWithdrawalPreviousPaisa).isEqualTo(10_000_000L)
+        assertThat(after.navigateToWithdrawalNewPaisa).isEqualTo(8_500_000L)
     }
 
     @Test
