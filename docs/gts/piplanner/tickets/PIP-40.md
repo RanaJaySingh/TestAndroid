@@ -32,7 +32,7 @@ Consent Yes/No + balance entry under `ui/setup` with `ConsentViewModel`, mock `B
 
 ## Test result
 
-`./gradlew assembleDebug test` — see PR body.
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL**.
 
 ## Assumptions
 
