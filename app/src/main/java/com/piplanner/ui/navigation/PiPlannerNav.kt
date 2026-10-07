@@ -33,6 +33,7 @@ import com.piplanner.ui.goals.TransferViewModel
 import com.piplanner.ui.goals.WithdrawalScreen
 import com.piplanner.ui.goals.WithdrawalViewModel
 import com.piplanner.ui.settings.SettingsScreen
+import com.piplanner.ui.settings.SettingsViewModel
 import com.piplanner.ui.setup.AccountsScreen
 import com.piplanner.ui.setup.AccountsViewModel
 import com.piplanner.ui.setup.ConsentSheet
@@ -77,6 +78,8 @@ object PiPlannerRoutes {
         "transfer?fromGoalId={fromGoalId}&toGoalId={toGoalId}&amountPaisa={amountPaisa}"
     const val DELETE_GOAL: String = "delete_goal/{goalId}"
     const val SETTINGS: String = "settings"
+    /** Consent re-prompt from Settings Off→On (frame 20b); returns to Settings. */
+    const val SETTINGS_CONSENT: String = "settings_consent"
 
     fun goalDetail(goalId: String): String = "goal_detail/$goalId"
     fun goalEdit(goalId: String): String = "goal_edit/$goalId"
@@ -425,8 +428,34 @@ fun PiPlannerNavHost(
             )
         }
         composable(PiPlannerRoutes.SETTINGS) {
+            val viewModel: SettingsViewModel = hiltViewModel()
             SettingsScreen(
+                viewModel = viewModel,
                 onBack = { navController.popBackStack() },
+                onOpenConsent = {
+                    navController.navigate(PiPlannerRoutes.SETTINGS_CONSENT)
+                },
+                onResetToWelcome = {
+                    navController.navigate(PiPlannerRoutes.WELCOME) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+        composable(PiPlannerRoutes.SETTINGS_CONSENT) {
+            val viewModel: ConsentViewModel = hiltViewModel()
+            LaunchedEffect(Unit) {
+                viewModel.loadAccounts()
+            }
+            // Frame 20b — re-consent from Settings; Yes/No return without setup handoff.
+            ConsentSheet(
+                viewModel = viewModel,
+                onYesFetched = {
+                    navController.popBackStack(PiPlannerRoutes.SETTINGS, inclusive = false)
+                },
+                onNo = {
+                    navController.popBackStack(PiPlannerRoutes.SETTINGS, inclusive = false)
+                },
             )
         }
     }
