@@ -50,12 +50,13 @@ Started from `1f3bb8fa926265df96f4324af374522d1b2da7db` (main after PIP-94). Tou
 
 **PASS_HOLD tip-lag rebases (2026-10-07):**
 1. Onto `1a77a3b87855d3b6dfa548db903d9d4503396f56` (PIP-90 MERGED) — clean.
-2. Onto `4552dca40dc3e4802d9141ed33b133e3bdb18f3c` (PIP-78 MERGED) — clean (keep-both N/A). Do not treat `1a77a3b8` as tip-current.
+2. Onto `4552dca40dc3e4802d9141ed33b133e3bdb18f3c` (PIP-78 MERGED) — clean.
+3. Onto `5f938820da093121a2ccdcdb126c01d65c7a53a5` (PIP-92 MERGED) — clean. Do not treat `4552dca4` / `ffa075d9` as tip-current.
 
 ## Test results
 
 `./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (Ask + shared-component suites green).
-Post-rebase onto `4552dca4`: awaiting GitHub CI 2/2 on tip-current head.
+Post-rebase onto `5f938820`: awaiting GitHub CI 2/2 on tip-current head.
 
 ## Out of scope
 
