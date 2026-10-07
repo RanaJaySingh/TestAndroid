@@ -7,12 +7,16 @@ import com.piplanner.data.model.AppState
 import com.piplanner.data.model.Goal
 import com.piplanner.data.model.HistoryEntry
 import com.piplanner.data.model.HistoryEntryType
+import com.piplanner.data.model.StandingSplit
 import com.piplanner.data.repository.PiPlannerRepository
+import com.piplanner.domain.CreditEntryService
 import com.piplanner.domain.DedicatedAccountService
 import com.piplanner.domain.FormattingService
 import com.piplanner.domain.GoalsBalanceAction
 import com.piplanner.domain.GoalsTabService
 import com.piplanner.domain.MockBalanceSyncService
+import com.piplanner.domain.OpeningSplitService
+import com.piplanner.domain.StandingSplitService
 import com.piplanner.util.DemoData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -106,18 +110,12 @@ class GoalsViewModelTest {
     }
 
     @Test
-    fun performSyncUpdatesDedicatedBalance() = runTest(dispatcher) {
-        val seeded = makePostSetupState(consent = true).let { state ->
-            state.copy(
-                accounts = state.accounts.map {
-                    if (it.isDedicated) it.copy(balance = 5_000_000L) else it
-                },
-            )
-        }
-        persistence.saveState(seeded)
+    fun performSyncHigherCreatesOpenCreditAndBlocksFurtherSync() = runTest(dispatcher) {
+        persistence.saveState(makePostSetupState(consent = true))
         viewModel = createViewModel(
             sync = MockBalanceSyncService(
                 knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+                fetchedBalancePaisa = MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA,
             ),
         )
         viewModel.load()
@@ -128,14 +126,71 @@ class GoalsViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertThat(state.showSyncSheet).isFalse()
-        assertThat(state.totalSavingsPaisa).isEqualTo(MockBalanceSyncService.DEMO_BALANCE_PAISA)
+        assertThat(state.showSyncSheet).isTrue()
+        assertThat(state.canContinueToCreditEntry).isTrue()
+        assertThat(state.createdCreditEntryId).isNotNull()
+        assertThat(state.isSyncOrUpdateBlocked).isTrue()
+        assertThat(state.openEntryBannerMessage).contains("Assign now")
+        assertThat(state.totalSavingsPaisa)
+            .isEqualTo(MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA)
+
+        viewModel.dismissSyncSheet()
+        viewModel.tapBalanceAction()
+        assertThat(viewModel.uiState.value.errorMessage)
+            .contains("open credit")
+        assertThat(viewModel.uiState.value.showSyncSheet).isFalse()
     }
 
     @Test
-    fun routesContract_goalDetailAndSettings() {
+    fun performSyncSameShowsNoNewCredit() = runTest(dispatcher) {
+        persistence.saveState(makePostSetupState(consent = true))
+        viewModel = createViewModel(
+            sync = MockBalanceSyncService(
+                knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+                fetchedBalancePaisa = MockBalanceSyncService.DEMO_BALANCE_PAISA,
+            ),
+        )
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.tapBalanceAction()
+        viewModel.performSync()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.syncInfoMessage).isEqualTo(CreditEntryService.NO_NEW_CREDIT_MESSAGE)
+        assertThat(state.createdCreditEntryId).isNull()
+        assertThat(state.isSyncOrUpdateBlocked).isFalse()
+    }
+
+    @Test
+    fun performSyncLowerExposesWithdrawalStub() = runTest(dispatcher) {
+        persistence.saveState(makePostSetupState(consent = true))
+        viewModel = createViewModel(
+            sync = MockBalanceSyncService(
+                knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+                fetchedBalancePaisa = 8_500_000L,
+            ),
+        )
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.tapBalanceAction()
+        viewModel.performSync()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.canContinueToWithdrawal).isTrue()
+        assertThat(state.withdrawalShortfallPaisa).isEqualTo(1_500_000L)
+        assertThat(state.createdCreditEntryId).isNull()
+    }
+
+    @Test
+    fun routesContract_goalDetailCreditEntryAndSettings() {
         assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.goalDetail("abc"))
             .isEqualTo("goal_detail/abc")
+        assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.creditEntry("entry-1"))
+            .isEqualTo("credit_entry/entry-1")
         assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.SETTINGS).isEqualTo("settings")
         assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.GOALS_TAB).isEqualTo("goals_tab")
     }
@@ -143,15 +198,18 @@ class GoalsViewModelTest {
     private fun createViewModel(
         sync: MockBalanceSyncService = MockBalanceSyncService(
             knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+            fetchedBalancePaisa = MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA,
         ),
     ): GoalsViewModel {
         val dedicated = DedicatedAccountService()
+        val opening = OpeningSplitService()
         return GoalsViewModel(
             repository = PiPlannerRepository(persistence, dispatcher),
             formattingService = FormattingService(),
             goalsTabService = GoalsTabService(dedicated),
             dedicatedAccountService = dedicated,
             balanceSync = sync,
+            creditEntryService = CreditEntryService(opening, StandingSplitService(opening)),
         )
     }
 
@@ -202,7 +260,10 @@ class GoalsViewModelTest {
             accounts = listOf(account),
             goals = listOf(car, emergency),
             history = listOf(opening),
-            standingSplits = emptyList(),
+            standingSplits = listOf(
+                StandingSplit(goalId = DemoData.DEMO_CAR_GOAL_ID, percentage = 0.6),
+                StandingSplit(goalId = DemoData.DEMO_EMERGENCY_GOAL_ID, percentage = 0.4),
+            ),
             hasCompletedSetup = true,
         )
     }

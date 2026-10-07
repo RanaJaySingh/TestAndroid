@@ -5,8 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.piplanner.data.model.Account
 import com.piplanner.data.model.AppState
 import com.piplanner.data.model.Goal
+import com.piplanner.data.model.HistoryEntry
 import com.piplanner.data.repository.PiPlannerRepository
+import com.piplanner.di.PostSetupBalanceSync
+import com.piplanner.domain.BalanceCompareResult
 import com.piplanner.domain.BalanceSyncService
+import com.piplanner.domain.CreditEntryException
+import com.piplanner.domain.CreditEntryService
+import com.piplanner.domain.CreditProcessOutcome
 import com.piplanner.domain.DedicatedAccountService
 import com.piplanner.domain.FormattingService
 import com.piplanner.domain.GoalsBalanceAction
@@ -17,10 +23,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 
 /**
- * View model for Goals tab (frames 9 / 9b / 9c / 11) — PIP-46.
+ * View model for Goals tab (frames 9 / 9b / 9c / 11) with Sync/Update credit flow (PIP-48).
  */
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
@@ -28,7 +36,8 @@ class GoalsViewModel @Inject constructor(
     private val formattingService: FormattingService,
     private val goalsTabService: GoalsTabService,
     private val dedicatedAccountService: DedicatedAccountService,
-    private val balanceSync: BalanceSyncService,
+    @PostSetupBalanceSync private val balanceSync: BalanceSyncService,
+    private val creditEntryService: CreditEntryService,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GoalsUiState())
@@ -50,7 +59,6 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    /** Gear → Settings. */
     fun openSettings() {
         _uiState.update { it.copy(navigateToSettings = true) }
     }
@@ -59,7 +67,6 @@ class GoalsViewModel @Inject constructor(
         _uiState.update { it.copy(navigateToSettings = false) }
     }
 
-    /** Goal card tap → Goal detail. */
     fun selectGoal(goalId: String) {
         _uiState.update { it.copy(selectedGoalId = goalId) }
     }
@@ -72,53 +79,108 @@ class GoalsViewModel @Inject constructor(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    /** Consent On → Sync sheet; Consent Off → Update balance sheet. */
+    /** Consent On → Sync sheet; Consent Off → Update balance sheet. Blocked by open entry (BR-6). */
     fun tapBalanceAction() {
+        if (_uiState.value.isSyncOrUpdateBlocked) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = when (it.balanceAction) {
+                        GoalsBalanceAction.Sync -> CreditEntryService.ASSIGN_OPEN_BEFORE_SYNC
+                        GoalsBalanceAction.UpdateBalance ->
+                            CreditEntryService.ASSIGN_OPEN_BEFORE_UPDATE
+                    },
+                )
+            }
+            return
+        }
         when (_uiState.value.balanceAction) {
             GoalsBalanceAction.Sync ->
-                _uiState.update { it.copy(showSyncSheet = true) }
+                _uiState.update {
+                    it.copy(
+                        showSyncSheet = true,
+                        syncPhase = SyncSheetPhase.Idle,
+                        syncInfoMessage = null,
+                        syncErrorMessage = null,
+                        createdCreditEntryId = null,
+                        withdrawalShortfallPaisa = null,
+                        formattedFetchedBalance = null,
+                        formattedNewCreditAmount = null,
+                    )
+                }
             GoalsBalanceAction.UpdateBalance ->
-                _uiState.update { it.copy(showUpdateBalanceSheet = true) }
+                _uiState.update {
+                    it.copy(
+                        showUpdateBalanceSheet = true,
+                        updateInfoMessage = null,
+                        updateErrorMessage = null,
+                        createdCreditEntryId = null,
+                        withdrawalShortfallPaisa = null,
+                    )
+                }
         }
     }
 
     fun dismissSyncSheet() {
-        _uiState.update { it.copy(showSyncSheet = false) }
+        _uiState.update {
+            it.copy(
+                showSyncSheet = false,
+                syncPhase = SyncSheetPhase.Idle,
+                isSyncing = false,
+            )
+        }
     }
 
     fun dismissUpdateBalanceSheet() {
         _uiState.update { it.copy(showUpdateBalanceSheet = false) }
     }
 
-    /**
-     * Sync sheet hook — calls [BalanceSyncService] stub.
-     * Full credit-entry assignment is PIP-48.
-     */
     fun performSync() {
         viewModelScope.launch {
+            if (_uiState.value.isSyncOrUpdateBlocked) {
+                _uiState.update {
+                    it.copy(syncInfoMessage = CreditEntryService.ASSIGN_OPEN_BEFORE_SYNC)
+                }
+                return@launch
+            }
             val dedicated = dedicatedAccountService.dedicatedAccount(_uiState.value.accounts)
             if (dedicated == null) {
                 _uiState.update {
                     it.copy(
-                        showSyncSheet = false,
-                        errorMessage = "No dedicated savings account.",
+                        syncPhase = SyncSheetPhase.ShowingResult,
+                        syncErrorMessage = "No dedicated savings account.",
                     )
                 }
                 return@launch
             }
-            _uiState.update { it.copy(isSyncing = true) }
+
+            _uiState.update {
+                it.copy(
+                    isSyncing = true,
+                    syncPhase = SyncSheetPhase.Syncing,
+                    syncInfoMessage = null,
+                    syncErrorMessage = null,
+                    createdCreditEntryId = null,
+                    withdrawalShortfallPaisa = null,
+                    formattedPreviousBalance = formattingService.formatInrFromPaisa(dedicated.balance),
+                )
+            }
+
             val result = balanceSync.fetchBalance(dedicated.id)
             result.fold(
                 onSuccess = { paisa ->
-                    updateDedicatedBalance(paisa)
-                    _uiState.update { it.copy(isSyncing = false, showSyncSheet = false) }
+                    processBalanceOutcome(
+                        fetchedBalance = paisa,
+                        dedicatedAccountId = dedicated.id,
+                        isTyped = false,
+                        previousBalance = dedicated.balance,
+                    )
                 },
                 onFailure = { error ->
                     _uiState.update {
                         it.copy(
                             isSyncing = false,
-                            showSyncSheet = false,
-                            errorMessage = error.message ?: error.toString(),
+                            syncPhase = SyncSheetPhase.ShowingResult,
+                            syncErrorMessage = error.message ?: error.toString(),
                         )
                     }
                 },
@@ -126,15 +188,69 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Update-balance sheet hook — applies typed amount to dedicated account.
-     * Full credit-entry flow is PIP-48.
-     */
     fun applyManualBalance(paisa: Long) {
         viewModelScope.launch {
-            updateDedicatedBalance(paisa)
-            _uiState.update { it.copy(showUpdateBalanceSheet = false) }
+            if (_uiState.value.isSyncOrUpdateBlocked) {
+                _uiState.update {
+                    it.copy(updateInfoMessage = CreditEntryService.ASSIGN_OPEN_BEFORE_UPDATE)
+                }
+                return@launch
+            }
+            val dedicated = dedicatedAccountService.dedicatedAccount(_uiState.value.accounts)
+            if (dedicated == null) {
+                _uiState.update {
+                    it.copy(updateErrorMessage = "No dedicated savings account.")
+                }
+                return@launch
+            }
+            processBalanceOutcome(
+                fetchedBalance = paisa,
+                dedicatedAccountId = dedicated.id,
+                isTyped = true,
+                previousBalance = dedicated.balance,
+                forUpdateSheet = true,
+            )
         }
+    }
+
+    fun openCreditEntryFromSheet() {
+        val entryId = _uiState.value.createdCreditEntryId ?: return
+        _uiState.update {
+            it.copy(
+                showSyncSheet = false,
+                showUpdateBalanceSheet = false,
+                navigateToCreditEntryId = entryId,
+                isSyncing = false,
+            )
+        }
+    }
+
+    fun openCreditEntryFromBanner() {
+        val entryId = _uiState.value.openCreditEntryId ?: return
+        _uiState.update { it.copy(navigateToCreditEntryId = entryId) }
+    }
+
+    fun consumeCreditEntryNavigation() {
+        _uiState.update { it.copy(navigateToCreditEntryId = null) }
+    }
+
+    fun continueToWithdrawalStub() {
+        val shortfall = _uiState.value.withdrawalShortfallPaisa ?: return
+        _uiState.update {
+            it.copy(
+                showSyncSheet = false,
+                showUpdateBalanceSheet = false,
+                isSyncing = false,
+                withdrawalStubMessage = formattingService.formatInrFromPaisa(shortfall).let { amount ->
+                    "Balance went down by $amount. Withdrawal flow lands in a separate ticket."
+                },
+                navigateToWithdrawalStub = true,
+            )
+        }
+    }
+
+    fun consumeWithdrawalNavigation() {
+        _uiState.update { it.copy(navigateToWithdrawalStub = false) }
     }
 
     fun formattedSavedAmount(goal: Goal): String =
@@ -143,24 +259,148 @@ class GoalsViewModel @Inject constructor(
     fun statusLabel(goal: Goal): String =
         goalsTabService.statusLabel(goal.status())
 
-    private suspend fun updateDedicatedBalance(paisa: Long) {
-        val state = repository.loadState()
-        val updated = state.copy(
-            accounts = state.accounts.map { account ->
-                if (account.isDedicated) account.copy(balance = paisa) else account
-            },
-        )
-        repository.saveState(updated)
-        apply(updated)
+    private suspend fun processBalanceOutcome(
+        fetchedBalance: Long,
+        dedicatedAccountId: String,
+        isTyped: Boolean,
+        previousBalance: Long,
+        forUpdateSheet: Boolean = false,
+    ) {
+        try {
+            val state = repository.loadState()
+            val outcome = creditEntryService.processFetchedBalance(
+                state = state,
+                fetchedBalance = fetchedBalance,
+                dedicatedAccountId = dedicatedAccountId,
+                isTyped = isTyped,
+                id = UUID.randomUUID().toString(),
+                createdAt = Instant.now().toString(),
+            )
+            val formattedFetched = formattingService.formatInrFromPaisa(fetchedBalance)
+            val compare = creditEntryService.compare(previousBalance, fetchedBalance)
+            val formattedNew = when (compare) {
+                is BalanceCompareResult.Higher ->
+                    formattingService.formatInrFromPaisa(compare.creditAmount)
+                else -> null
+            }
+
+            when (outcome) {
+                is CreditProcessOutcome.NoNewCredit -> {
+                    if (forUpdateSheet) {
+                        _uiState.update {
+                            it.copy(
+                                updateInfoMessage = outcome.message,
+                                updateErrorMessage = null,
+                                createdCreditEntryId = null,
+                                withdrawalShortfallPaisa = null,
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isSyncing = false,
+                                syncPhase = SyncSheetPhase.ShowingResult,
+                                syncInfoMessage = outcome.message,
+                                formattedFetchedBalance = formattedFetched,
+                                formattedNewCreditAmount = null,
+                                createdCreditEntryId = null,
+                                withdrawalShortfallPaisa = null,
+                            )
+                        }
+                    }
+                }
+                is CreditProcessOutcome.WithdrawalRequired -> {
+                    val message = "Balance went down by ${
+                        formattingService.formatInrFromPaisa(outcome.shortfall)
+                    }."
+                    if (forUpdateSheet) {
+                        _uiState.update {
+                            it.copy(
+                                updateInfoMessage = message,
+                                updateErrorMessage = null,
+                                withdrawalShortfallPaisa = outcome.shortfall,
+                                createdCreditEntryId = null,
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isSyncing = false,
+                                syncPhase = SyncSheetPhase.ShowingResult,
+                                syncInfoMessage = message,
+                                formattedFetchedBalance = formattedFetched,
+                                formattedNewCreditAmount = null,
+                                withdrawalShortfallPaisa = outcome.shortfall,
+                                createdCreditEntryId = null,
+                            )
+                        }
+                    }
+                }
+                is CreditProcessOutcome.OpenCreditCreated -> {
+                    repository.saveState(outcome.state)
+                    apply(outcome.state)
+                    if (forUpdateSheet) {
+                        _uiState.update {
+                            it.copy(
+                                updateInfoMessage = null,
+                                updateErrorMessage = null,
+                                createdCreditEntryId = outcome.entry.id,
+                                withdrawalShortfallPaisa = null,
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isSyncing = false,
+                                syncPhase = SyncSheetPhase.ShowingResult,
+                                syncInfoMessage = null,
+                                formattedFetchedBalance = formattedFetched,
+                                formattedNewCreditAmount = formattedNew,
+                                createdCreditEntryId = outcome.entry.id,
+                                withdrawalShortfallPaisa = null,
+                            )
+                        }
+                    }
+                }
+            }
+        } catch (error: CreditEntryException) {
+            if (forUpdateSheet) {
+                _uiState.update { it.copy(updateErrorMessage = error.message) }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isSyncing = false,
+                        syncPhase = SyncSheetPhase.ShowingResult,
+                        syncErrorMessage = error.message,
+                    )
+                }
+            }
+        } catch (error: Exception) {
+            val message = error.message ?: error.toString()
+            if (forUpdateSheet) {
+                _uiState.update { it.copy(updateErrorMessage = message) }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isSyncing = false,
+                        syncPhase = SyncSheetPhase.ShowingResult,
+                        syncErrorMessage = message,
+                    )
+                }
+            }
+        }
     }
 
     private fun apply(state: AppState) {
         val action = goalsTabService.balanceAction(state.accounts)
         val total = goalsTabService.totalSavingsPaisa(state.accounts, state.goals)
+        val openEntry = creditEntryService.openCreditEntry(state.history)
+        val dedicated = dedicatedAccountService.dedicatedAccount(state.accounts)
         _uiState.update {
             it.copy(
                 accounts = state.accounts,
                 goals = state.goals,
+                history = state.history,
                 formattedTotalSavings = formattingService.formatInrFromPaisa(total),
                 totalSavingsPaisa = total,
                 balanceAction = action,
@@ -168,6 +408,14 @@ class GoalsViewModel @Inject constructor(
                 dedicatedAccountSubtitle = goalsTabService.dedicatedAccountSubtitle(state.accounts),
                 hasGoals = goalsTabService.hasGoals(state.goals),
                 isLoading = false,
+                openCreditEntryId = openEntry?.id,
+                openEntryBannerMessage = openEntry?.let { entry ->
+                    creditEntryService.openEntryBannerMessage(entry, formattingService)
+                },
+                isSyncOrUpdateBlocked = openEntry != null,
+                formattedPreviousBalance = formattingService.formatInrFromPaisa(
+                    dedicated?.balance ?: 0L,
+                ),
             )
         }
     }
@@ -176,6 +424,7 @@ class GoalsViewModel @Inject constructor(
 data class GoalsUiState(
     val accounts: List<Account> = emptyList(),
     val goals: List<Goal> = emptyList(),
+    val history: List<HistoryEntry> = emptyList(),
     val formattedTotalSavings: String = "₹0",
     val totalSavingsPaisa: Long = 0L,
     val balanceAction: GoalsBalanceAction = GoalsBalanceAction.UpdateBalance,
@@ -187,6 +436,28 @@ data class GoalsUiState(
     val errorMessage: String? = null,
     val showSyncSheet: Boolean = false,
     val showUpdateBalanceSheet: Boolean = false,
+    val syncPhase: SyncSheetPhase = SyncSheetPhase.Idle,
+    val syncInfoMessage: String? = null,
+    val syncErrorMessage: String? = null,
+    val updateInfoMessage: String? = null,
+    val updateErrorMessage: String? = null,
+    val formattedPreviousBalance: String = "₹0",
+    val formattedFetchedBalance: String? = null,
+    val formattedNewCreditAmount: String? = null,
+    val createdCreditEntryId: String? = null,
+    val openCreditEntryId: String? = null,
+    val openEntryBannerMessage: String? = null,
+    val isSyncOrUpdateBlocked: Boolean = false,
+    val withdrawalShortfallPaisa: Long? = null,
+    val withdrawalStubMessage: String? = null,
+    val navigateToCreditEntryId: String? = null,
+    val navigateToWithdrawalStub: Boolean = false,
     val navigateToSettings: Boolean = false,
     val selectedGoalId: String? = null,
-)
+) {
+    val canContinueToCreditEntry: Boolean
+        get() = createdCreditEntryId != null
+
+    val canContinueToWithdrawal: Boolean
+        get() = withdrawalShortfallPaisa != null
+}

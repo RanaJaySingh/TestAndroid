@@ -28,15 +28,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 
 /**
- * Goals tab — design frames 9 / 9b / 9c / 11 (PIP-46).
- * Sync / Update sheets are hooks only (PIP-48 owns full credit entry).
- * Goal detail is navigated via [onOpenGoal] (stub or PIP-50 route).
+ * Goals tab — design frames 9 / 9b / 9c / 11 with Sync/Update credit entry (PIP-48).
  */
 @Composable
 fun GoalsTab(
     viewModel: GoalsViewModel,
     onOpenGoal: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenCreditEntry: (String) -> Unit,
+    onOpenWithdrawalStub: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -57,6 +57,19 @@ fun GoalsTab(
         }
     }
 
+    LaunchedEffect(uiState.navigateToCreditEntryId) {
+        val entryId = uiState.navigateToCreditEntryId ?: return@LaunchedEffect
+        viewModel.consumeCreditEntryNavigation()
+        onOpenCreditEntry(entryId)
+    }
+
+    LaunchedEffect(uiState.navigateToWithdrawalStub) {
+        if (uiState.navigateToWithdrawalStub) {
+            viewModel.consumeWithdrawalNavigation()
+            onOpenWithdrawalStub()
+        }
+    }
+
     GoalsTabContent(
         uiState = uiState,
         formattedSavedAmount = viewModel::formattedSavedAmount,
@@ -67,8 +80,13 @@ fun GoalsTab(
         onDismissError = viewModel::clearError,
         onDismissSync = viewModel::dismissSyncSheet,
         onConfirmSync = viewModel::performSync,
+        onContinueCreditFromSync = viewModel::openCreditEntryFromSheet,
+        onContinueWithdrawalFromSync = viewModel::continueToWithdrawalStub,
         onDismissUpdateBalance = viewModel::dismissUpdateBalanceSheet,
         onApplyManualBalance = viewModel::applyManualBalance,
+        onContinueCreditFromUpdate = viewModel::openCreditEntryFromSheet,
+        onContinueWithdrawalFromUpdate = viewModel::continueToWithdrawalStub,
+        onAssignNow = viewModel::openCreditEntryFromBanner,
     )
 }
 
@@ -83,8 +101,13 @@ fun GoalsTabContent(
     onDismissError: () -> Unit,
     onDismissSync: () -> Unit,
     onConfirmSync: () -> Unit,
+    onContinueCreditFromSync: () -> Unit,
+    onContinueWithdrawalFromSync: () -> Unit,
     onDismissUpdateBalance: () -> Unit,
     onApplyManualBalance: (Long) -> Unit,
+    onContinueCreditFromUpdate: () -> Unit,
+    onContinueWithdrawalFromUpdate: () -> Unit,
+    onAssignNow: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -114,6 +137,13 @@ fun GoalsTabContent(
             }
         }
 
+        uiState.openEntryBannerMessage?.let { message ->
+            OpenEntryBanner(
+                message = message,
+                onAssignNow = onAssignNow,
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,6 +158,17 @@ fun GoalsTabContent(
                 actionTitle = uiState.balanceActionTitle,
                 onAction = onBalanceAction,
             )
+
+            uiState.withdrawalStubMessage?.let { message ->
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Withdrawal stub message"
+                    },
+                )
+            }
 
             when {
                 uiState.isLoading && !uiState.hasGoals -> {
@@ -174,8 +215,18 @@ fun GoalsTabContent(
 
     if (uiState.showSyncSheet) {
         GoalsSyncSheet(
-            isSyncing = uiState.isSyncing,
+            phase = uiState.syncPhase,
+            formattedPrevious = uiState.formattedPreviousBalance,
+            formattedFetched = uiState.formattedFetchedBalance,
+            formattedNewAmount = uiState.formattedNewCreditAmount,
+            infoMessage = uiState.syncInfoMessage,
+            errorMessage = uiState.syncErrorMessage,
+            isBlockedByOpenEntry = uiState.isSyncOrUpdateBlocked,
+            canContinueToCreditEntry = uiState.canContinueToCreditEntry,
+            canContinueToWithdrawal = uiState.canContinueToWithdrawal,
             onSync = onConfirmSync,
+            onContinueToCreditEntry = onContinueCreditFromSync,
+            onContinueToWithdrawal = onContinueWithdrawalFromSync,
             onDismiss = onDismissSync,
         )
     }
@@ -183,7 +234,14 @@ fun GoalsTabContent(
     if (uiState.showUpdateBalanceSheet) {
         GoalsUpdateBalanceSheet(
             currentFormatted = uiState.formattedTotalSavings,
+            infoMessage = uiState.updateInfoMessage,
+            errorMessage = uiState.updateErrorMessage,
+            isBlockedByOpenEntry = uiState.isSyncOrUpdateBlocked,
+            canContinueToCreditEntry = uiState.canContinueToCreditEntry,
+            canContinueToWithdrawal = uiState.canContinueToWithdrawal,
             onApply = onApplyManualBalance,
+            onContinueToCreditEntry = onContinueCreditFromUpdate,
+            onContinueToWithdrawal = onContinueWithdrawalFromUpdate,
             onDismiss = onDismissUpdateBalance,
         )
     }

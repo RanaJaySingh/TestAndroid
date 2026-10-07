@@ -30,21 +30,23 @@ class PinException(val error: PinError) : Exception(error.name)
 
 /**
  * Demo Balance sync used by Consent Yes / UPI PIN paths (PRD R3 / R4).
+ * Goals Sync/Update demos may pass [fetchedBalancePaisa] = [DEMO_HIGHER_BALANCE_PAISA].
  */
 class MockBalanceSyncService(
     private val knownAccountIds: Set<String> = emptySet(),
+    private val fetchedBalancePaisa: Long = DEMO_BALANCE_PAISA,
 ) : BalanceSyncService {
 
     override suspend fun fetchBalance(accountId: String): Result<Long> {
         if (knownAccountIds.isNotEmpty() && accountId !in knownAccountIds) {
             return Result.failure(SyncException(SyncError.AccountNotFound))
         }
-        return Result.success(DEMO_BALANCE_PAISA)
+        return Result.success(fetchedBalancePaisa)
     }
 
     override suspend fun verifyUpiPin(pin: String): Result<Long> {
         return if (pin == DEMO_PIN) {
-            Result.success(DEMO_BALANCE_PAISA)
+            Result.success(fetchedBalancePaisa)
         } else {
             Result.failure(PinException(PinError.WrongPin))
         }
@@ -59,6 +61,9 @@ class MockBalanceSyncService(
 
         /** Seeded opening balance — ₹1,00,000 (PRD R3 / persona). */
         const val DEMO_BALANCE_PAISA: Long = 10_000_000L
+
+        /** Demo credit after Sync — ₹1,10,000 (₹10,000 new credit for PIP-48 demos). */
+        const val DEMO_HIGHER_BALANCE_PAISA: Long = 11_000_000L
     }
 }
 

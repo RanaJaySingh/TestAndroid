@@ -28,6 +28,8 @@ import com.piplanner.ui.history.HistoryTabPlaceholder
 fun MainTabsScreen(
     onOpenGoal: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenCreditEntry: (String) -> Unit,
+    onOpenWithdrawalStub: () -> Unit,
     goalsViewModel: GoalsViewModel = hiltViewModel(),
 ) {
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -71,6 +73,8 @@ fun MainTabsScreen(
                     viewModel = goalsViewModel,
                     onOpenGoal = onOpenGoal,
                     onOpenSettings = onOpenSettings,
+                    onOpenCreditEntry = onOpenCreditEntry,
+                    onOpenWithdrawalStub = onOpenWithdrawalStub,
                 )
                 1 -> HistoryTabPlaceholder()
                 else -> AskTabPlaceholder()
