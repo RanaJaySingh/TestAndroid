@@ -137,6 +137,8 @@
     <string name="history_type_transfer">Transfer</string>
     <string name="history_type_withdrawal">Withdrawal</string>
     <string name="history_type_deleted">Deleted / moved</string>
+    <!-- History list type label (PIP-60 AC / PIP-59 parity); writer title remains above. -->
+    <string name="history_type_goal_deleted_list">Goal deleted</string>
 
     <string name="transfer_title">Transfer</string>
     <string name="transfer_subtitle">Move saved money between goals. Standing split stays the same.</string>
@@ -187,6 +189,10 @@
 
     <string name="history_tab_title">History</string>
     <string name="history_tab_placeholder_body">History tab arrives in a later ticket.</string>
+    <string name="history_empty_title">No history yet</string>
+    <string name="history_detail_missing">This history entry is no longer available.</string>
+    <string name="history_detail_allocations">Allocations</string>
+    <string name="history_original_amounts">Original amounts never change</string>
     <string name="ask_tab_title">Ask</string>
     <string name="ask_tab_placeholder_body">Ask tab arrives in a later ticket.</string>
 

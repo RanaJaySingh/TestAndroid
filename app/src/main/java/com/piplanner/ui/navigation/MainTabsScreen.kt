@@ -19,7 +19,8 @@ import com.piplanner.domain.GoalsTabService
 import com.piplanner.ui.ask.AskTabPlaceholder
 import com.piplanner.ui.goals.GoalsTab
 import com.piplanner.ui.goals.GoalsViewModel
-import com.piplanner.ui.history.HistoryTabPlaceholder
+import com.piplanner.ui.history.HistoryTab
+import com.piplanner.ui.history.HistoryViewModel
 
 /**
  * Post-setup shell — Spec §5.3 Bottom nav: Goals | History | Ask (Settings via gear).
@@ -32,7 +33,10 @@ fun MainTabsScreen(
     onOpenWithdrawal: (previousPaisa: Long, newPaisa: Long, isTyped: Boolean) -> Unit,
     onOpenStandingSplit: () -> Unit = {},
     onOpenTransfer: () -> Unit = {},
+    onOpenHistoryOpening: (String) -> Unit = {},
+    onOpenHistoryDetail: (String) -> Unit = {},
     goalsViewModel: GoalsViewModel = hiltViewModel(),
+    historyViewModel: HistoryViewModel = hiltViewModel(),
 ) {
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val titles = GoalsTabService.TAB_TITLES
@@ -80,7 +84,12 @@ fun MainTabsScreen(
                     onOpenStandingSplit = onOpenStandingSplit,
                     onOpenTransfer = onOpenTransfer,
                 )
-                1 -> HistoryTabPlaceholder()
+                1 -> HistoryTab(
+                    viewModel = historyViewModel,
+                    onOpenCreditEntry = onOpenCreditEntry,
+                    onOpenOpeningEntry = onOpenHistoryOpening,
+                    onOpenLockedDetail = onOpenHistoryDetail,
+                )
                 else -> AskTabPlaceholder()
             }
         }

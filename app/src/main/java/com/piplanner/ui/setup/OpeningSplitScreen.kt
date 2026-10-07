@@ -34,10 +34,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.data.model.Goal
 import com.piplanner.data.model.HistoryEntry
-import com.piplanner.domain.OpeningSplitService
+import com.piplanner.domain.HistoryService
 
 /**
  * Opening split screen — design frames 8 (multi-goal) and 8b (single-goal).
+ * Read-only History path (12a) uses [onBack] + [HistoryService.ORIGINAL_AMOUNTS_CAPTION].
  */
 @Composable
 fun OpeningSplitScreen(
@@ -46,6 +47,7 @@ fun OpeningSplitScreen(
     openingBalance: Long,
     lockedEntry: HistoryEntry? = null,
     onNavigateToGoals: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -72,6 +74,7 @@ fun OpeningSplitScreen(
         onConfirmLock = viewModel::confirmLock,
         onDismissConfirm = viewModel::dismissConfirmLock,
         onDismissError = viewModel::clearError,
+        onBack = onBack,
     )
 }
 
@@ -84,6 +87,7 @@ fun OpeningSplitContent(
     onConfirmLock: () -> Unit,
     onDismissConfirm: () -> Unit,
     onDismissError: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -92,6 +96,16 @@ fun OpeningSplitContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
+        if (onBack != null) {
+            TextButton(
+                onClick = onBack,
+                modifier = Modifier.semantics {
+                    contentDescription = "Back from opening balance history"
+                },
+            ) {
+                Text(stringResource(R.string.back))
+            }
+        }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = if (uiState.isReadOnly) {
@@ -104,12 +118,20 @@ fun OpeningSplitContent(
             )
             Text(
                 text = if (uiState.isReadOnly) {
-                    OpeningSplitService.LOCKED_AMOUNTS_CAPTION
+                    // Frame 12a / BR-3 History read-only copy
+                    HistoryService.ORIGINAL_AMOUNTS_CAPTION
                 } else {
                     stringResource(R.string.opening_split_subtitle)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = if (uiState.isReadOnly) {
+                    Modifier.semantics {
+                        contentDescription = HistoryService.ORIGINAL_AMOUNTS_CAPTION
+                    }
+                } else {
+                    Modifier
+                },
             )
         }
 

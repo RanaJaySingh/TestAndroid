@@ -32,6 +32,9 @@ import com.piplanner.ui.goals.TransferScreen
 import com.piplanner.ui.goals.TransferViewModel
 import com.piplanner.ui.goals.WithdrawalScreen
 import com.piplanner.ui.goals.WithdrawalViewModel
+import com.piplanner.ui.history.HistoryDetailViewModel
+import com.piplanner.ui.history.HistoryEntryDetailScreen
+import com.piplanner.ui.history.HistoryOpeningBalanceScreen
 import com.piplanner.ui.settings.SettingsScreen
 import com.piplanner.ui.settings.SettingsViewModel
 import com.piplanner.ui.setup.AccountsScreen
@@ -77,6 +80,8 @@ object PiPlannerRoutes {
     const val TRANSFER: String =
         "transfer?fromGoalId={fromGoalId}&toGoalId={toGoalId}&amountPaisa={amountPaisa}"
     const val DELETE_GOAL: String = "delete_goal/{goalId}"
+    const val HISTORY_OPENING: String = "history_opening/{entryId}"
+    const val HISTORY_DETAIL: String = "history_detail/{entryId}"
     const val SETTINGS: String = "settings"
     /** Consent re-prompt from Settings Off→On (frame 20b); returns to Settings. */
     const val SETTINGS_CONSENT: String = "settings_consent"
@@ -100,6 +105,8 @@ object PiPlannerRoutes {
     }
 
     fun deleteGoal(goalId: String): String = "delete_goal/$goalId"
+    fun historyOpening(entryId: String): String = "history_opening/$entryId"
+    fun historyDetail(entryId: String): String = "history_detail/$entryId"
 }
 
 /**
@@ -307,6 +314,12 @@ fun PiPlannerNavHost(
                 onOpenTransfer = {
                     navController.navigate(PiPlannerRoutes.transfer())
                 },
+                onOpenHistoryOpening = { entryId ->
+                    navController.navigate(PiPlannerRoutes.historyOpening(entryId))
+                },
+                onOpenHistoryDetail = { entryId ->
+                    navController.navigate(PiPlannerRoutes.historyDetail(entryId))
+                },
             )
         }
         composable(PiPlannerRoutes.STANDING_SPLIT) {
@@ -425,6 +438,38 @@ fun PiPlannerNavHost(
                     // Pop delete + detail so Goals tab reflects removal.
                     navController.popBackStack(PiPlannerRoutes.GOALS_TAB, inclusive = false)
                 },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.HISTORY_OPENING,
+            arguments = listOf(
+                navArgument(HistoryDetailViewModel.NAV_ARG_ENTRY_ID) {
+                    type = NavType.StringType
+                },
+            ),
+        ) { backStackEntry ->
+            val entryId = checkNotNull(
+                backStackEntry.arguments?.getString(HistoryDetailViewModel.NAV_ARG_ENTRY_ID),
+            )
+            val viewModel: OpeningSplitViewModel = hiltViewModel()
+            HistoryOpeningBalanceScreen(
+                entryId = entryId,
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.HISTORY_DETAIL,
+            arguments = listOf(
+                navArgument(HistoryDetailViewModel.NAV_ARG_ENTRY_ID) {
+                    type = NavType.StringType
+                },
+            ),
+        ) {
+            val viewModel: HistoryDetailViewModel = hiltViewModel()
+            HistoryEntryDetailScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
             )
         }
         composable(PiPlannerRoutes.SETTINGS) {
