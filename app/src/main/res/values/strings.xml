@@ -89,6 +89,22 @@
     <string name="credit_assign_now">Assign now</string>
     <string name="withdrawal_stub_title">Withdrawal</string>
     <string name="withdrawal_stub_body">Lower balance was detected. Full withdrawal allocation UI lands in a separate ticket.</string>
+    <string name="withdrawal_title">Withdrawal</string>
+    <string name="withdrawal_subtitle">Assign the shortfall across goals. Reductions must equal the amount withdrawn.</string>
+    <string name="withdrawal_previous">Previous</string>
+    <string name="withdrawal_balance_now">Balance now</string>
+    <string name="withdrawal_shortfall">Shortfall</string>
+    <string name="withdrawal_running_total">Running total</string>
+    <string name="withdrawal_reductions_heading">Reduce from</string>
+    <string name="withdrawal_reduction_label">Reduction</string>
+    <string name="withdrawal_remaining_label">Remaining</string>
+    <string name="withdrawal_save_lock">Save and lock</string>
+    <string name="withdrawal_save_failed">Couldn’t save withdrawal</string>
+    <string name="withdrawal_edit_locked_note">Reductions locked after one edit.</string>
+    <string name="withdrawal_record_cta">Record a withdrawal</string>
+    <string name="withdrawal_record_subtitle">Enter the new dedicated savings balance after money left the account.</string>
+    <string name="withdrawal_record_new_balance">New balance (₹)</string>
+    <string name="withdrawal_record_must_be_lower">New balance must be lower than the current balance.</string>
     <string name="apply">Apply</string>
     <string name="close">Close</string>
 

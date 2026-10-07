@@ -29,7 +29,7 @@ fun MainTabsScreen(
     onOpenGoal: (String) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenCreditEntry: (String) -> Unit,
-    onOpenWithdrawalStub: () -> Unit,
+    onOpenWithdrawal: (previousPaisa: Long, newPaisa: Long, isTyped: Boolean) -> Unit,
     onOpenStandingSplit: () -> Unit = {},
     goalsViewModel: GoalsViewModel = hiltViewModel(),
 ) {
@@ -75,7 +75,7 @@ fun MainTabsScreen(
                     onOpenGoal = onOpenGoal,
                     onOpenSettings = onOpenSettings,
                     onOpenCreditEntry = onOpenCreditEntry,
-                    onOpenWithdrawalStub = onOpenWithdrawalStub,
+                    onOpenWithdrawal = onOpenWithdrawal,
                     onOpenStandingSplit = onOpenStandingSplit,
                 )
                 1 -> HistoryTabPlaceholder()

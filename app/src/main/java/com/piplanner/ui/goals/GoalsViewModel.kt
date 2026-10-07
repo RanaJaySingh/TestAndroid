@@ -103,6 +103,8 @@ class GoalsViewModel @Inject constructor(
                         syncErrorMessage = null,
                         createdCreditEntryId = null,
                         withdrawalShortfallPaisa = null,
+                        withdrawalPreviousBalancePaisa = null,
+                        withdrawalNewBalancePaisa = null,
                         formattedFetchedBalance = null,
                         formattedNewCreditAmount = null,
                     )
@@ -115,6 +117,8 @@ class GoalsViewModel @Inject constructor(
                         updateErrorMessage = null,
                         createdCreditEntryId = null,
                         withdrawalShortfallPaisa = null,
+                        withdrawalPreviousBalancePaisa = null,
+                        withdrawalNewBalancePaisa = null,
                     )
                 }
         }
@@ -161,6 +165,8 @@ class GoalsViewModel @Inject constructor(
                     syncErrorMessage = null,
                     createdCreditEntryId = null,
                     withdrawalShortfallPaisa = null,
+                    withdrawalPreviousBalancePaisa = null,
+                    withdrawalNewBalancePaisa = null,
                     formattedPreviousBalance = formattingService.formatInrFromPaisa(dedicated.balance),
                 )
             }
@@ -234,24 +240,74 @@ class GoalsViewModel @Inject constructor(
         _uiState.update { it.copy(navigateToCreditEntryId = null) }
     }
 
-    fun continueToWithdrawalStub() {
-        val shortfall = _uiState.value.withdrawalShortfallPaisa ?: return
+    fun continueToWithdrawal() {
+        val previous = _uiState.value.withdrawalPreviousBalancePaisa ?: return
+        val newBalance = _uiState.value.withdrawalNewBalancePaisa ?: return
         _uiState.update {
             it.copy(
                 showSyncSheet = false,
                 showUpdateBalanceSheet = false,
+                showRecordWithdrawalSheet = false,
                 isSyncing = false,
-                withdrawalStubMessage = formattingService.formatInrFromPaisa(shortfall).let { amount ->
-                    "Balance went down by $amount. Withdrawal flow lands in a separate ticket."
-                },
-                navigateToWithdrawalStub = true,
+                withdrawalStubMessage = null,
+                navigateToWithdrawalPreviousPaisa = previous,
+                navigateToWithdrawalNewPaisa = newBalance,
+                navigateToWithdrawalIsTyped = false,
+            )
+        }
+    }
+
+    /** Frame 18c — open manual "Record a withdrawal" sheet. */
+    fun openRecordWithdrawal() {
+        if (_uiState.value.isSyncOrUpdateBlocked) {
+            _uiState.update {
+                it.copy(errorMessage = CreditEntryService.ASSIGN_OPEN_BEFORE_UPDATE)
+            }
+            return
+        }
+        _uiState.update {
+            it.copy(
+                showRecordWithdrawalSheet = true,
+                showSyncSheet = false,
+                showUpdateBalanceSheet = false,
+            )
+        }
+    }
+
+    fun dismissRecordWithdrawalSheet() {
+        _uiState.update { it.copy(showRecordWithdrawalSheet = false) }
+    }
+
+    /** Manual path: new balance must be lower than dedicated balance. */
+    fun continueRecordWithdrawal(newBalancePaisa: Long) {
+        val previous = dedicatedAccountService.dedicatedAccount(_uiState.value.accounts)?.balance
+            ?: return
+        if (newBalancePaisa >= previous || newBalancePaisa < 0L) return
+        _uiState.update {
+            it.copy(
+                showRecordWithdrawalSheet = false,
+                withdrawalShortfallPaisa = previous - newBalancePaisa,
+                withdrawalPreviousBalancePaisa = previous,
+                withdrawalNewBalancePaisa = newBalancePaisa,
+                navigateToWithdrawalPreviousPaisa = previous,
+                navigateToWithdrawalNewPaisa = newBalancePaisa,
+                navigateToWithdrawalIsTyped = true,
             )
         }
     }
 
     fun consumeWithdrawalNavigation() {
-        _uiState.update { it.copy(navigateToWithdrawalStub = false) }
+        _uiState.update {
+            it.copy(
+                navigateToWithdrawalPreviousPaisa = null,
+                navigateToWithdrawalNewPaisa = null,
+                navigateToWithdrawalIsTyped = false,
+            )
+        }
     }
+
+    /** @deprecated Use [continueToWithdrawal]; kept name alias for call-site migration. */
+    fun continueToWithdrawalStub() = continueToWithdrawal()
 
     fun formattedSavedAmount(goal: Goal): String =
         formattingService.formatInrFromPaisa(goal.savedAmount)
@@ -293,6 +349,8 @@ class GoalsViewModel @Inject constructor(
                                 updateErrorMessage = null,
                                 createdCreditEntryId = null,
                                 withdrawalShortfallPaisa = null,
+                                withdrawalPreviousBalancePaisa = null,
+                                withdrawalNewBalancePaisa = null,
                             )
                         }
                     } else {
@@ -305,6 +363,8 @@ class GoalsViewModel @Inject constructor(
                                 formattedNewCreditAmount = null,
                                 createdCreditEntryId = null,
                                 withdrawalShortfallPaisa = null,
+                                withdrawalPreviousBalancePaisa = null,
+                                withdrawalNewBalancePaisa = null,
                             )
                         }
                     }
@@ -319,6 +379,8 @@ class GoalsViewModel @Inject constructor(
                                 updateInfoMessage = message,
                                 updateErrorMessage = null,
                                 withdrawalShortfallPaisa = outcome.shortfall,
+                                withdrawalPreviousBalancePaisa = outcome.previousBalance,
+                                withdrawalNewBalancePaisa = outcome.newBalance,
                                 createdCreditEntryId = null,
                             )
                         }
@@ -331,6 +393,8 @@ class GoalsViewModel @Inject constructor(
                                 formattedFetchedBalance = formattedFetched,
                                 formattedNewCreditAmount = null,
                                 withdrawalShortfallPaisa = outcome.shortfall,
+                                withdrawalPreviousBalancePaisa = outcome.previousBalance,
+                                withdrawalNewBalancePaisa = outcome.newBalance,
                                 createdCreditEntryId = null,
                             )
                         }
@@ -346,6 +410,8 @@ class GoalsViewModel @Inject constructor(
                                 updateErrorMessage = null,
                                 createdCreditEntryId = outcome.entry.id,
                                 withdrawalShortfallPaisa = null,
+                                withdrawalPreviousBalancePaisa = null,
+                                withdrawalNewBalancePaisa = null,
                             )
                         }
                     } else {
@@ -358,6 +424,8 @@ class GoalsViewModel @Inject constructor(
                                 formattedNewCreditAmount = formattedNew,
                                 createdCreditEntryId = outcome.entry.id,
                                 withdrawalShortfallPaisa = null,
+                                withdrawalPreviousBalancePaisa = null,
+                                withdrawalNewBalancePaisa = null,
                             )
                         }
                     }
@@ -449,9 +517,14 @@ data class GoalsUiState(
     val openEntryBannerMessage: String? = null,
     val isSyncOrUpdateBlocked: Boolean = false,
     val withdrawalShortfallPaisa: Long? = null,
+    val withdrawalPreviousBalancePaisa: Long? = null,
+    val withdrawalNewBalancePaisa: Long? = null,
     val withdrawalStubMessage: String? = null,
+    val showRecordWithdrawalSheet: Boolean = false,
     val navigateToCreditEntryId: String? = null,
-    val navigateToWithdrawalStub: Boolean = false,
+    val navigateToWithdrawalPreviousPaisa: Long? = null,
+    val navigateToWithdrawalNewPaisa: Long? = null,
+    val navigateToWithdrawalIsTyped: Boolean = false,
     val navigateToSettings: Boolean = false,
     val selectedGoalId: String? = null,
 ) {
@@ -459,5 +532,15 @@ data class GoalsUiState(
         get() = createdCreditEntryId != null
 
     val canContinueToWithdrawal: Boolean
-        get() = withdrawalShortfallPaisa != null
+        get() = withdrawalShortfallPaisa != null &&
+            withdrawalPreviousBalancePaisa != null &&
+            withdrawalNewBalancePaisa != null
+
+    val navigateToWithdrawal: Boolean
+        get() = navigateToWithdrawalPreviousPaisa != null &&
+            navigateToWithdrawalNewPaisa != null
+
+    /** Backward-compatible alias used by GoalsTab LaunchedEffect. */
+    val navigateToWithdrawalStub: Boolean
+        get() = navigateToWithdrawal
 }

@@ -29,6 +29,8 @@ import com.piplanner.ui.goals.GoalEditScreen
 import com.piplanner.ui.goals.GoalEditViewModel
 import com.piplanner.ui.goals.StandingSplitScreen
 import com.piplanner.ui.goals.StandingSplitViewModel
+import com.piplanner.ui.goals.WithdrawalScreen
+import com.piplanner.ui.goals.WithdrawalViewModel
 import com.piplanner.ui.settings.SettingsScreen
 import com.piplanner.ui.setup.AccountsScreen
 import com.piplanner.ui.setup.AccountsViewModel
@@ -65,7 +67,7 @@ object PiPlannerRoutes {
     const val GOAL_DETAIL: String = "goal_detail/{goalId}"
     const val GOAL_EDIT: String = "goal_edit/{goalId}"
     const val CREDIT_ENTRY: String = "credit_entry/{entryId}"
-    const val WITHDRAWAL_STUB: String = "withdrawal_stub"
+    const val WITHDRAWAL: String = "withdrawal/{previousBalance}/{newBalance}/{isTyped}"
     const val TRANSFER: String = "transfer/{goalId}"
     const val DELETE_GOAL: String = "delete_goal/{goalId}"
     const val SETTINGS: String = "settings"
@@ -73,6 +75,11 @@ object PiPlannerRoutes {
     fun goalDetail(goalId: String): String = "goal_detail/$goalId"
     fun goalEdit(goalId: String): String = "goal_edit/$goalId"
     fun creditEntry(entryId: String): String = "credit_entry/$entryId"
+    fun withdrawal(
+        previousBalancePaisa: Long,
+        newBalancePaisa: Long,
+        isTyped: Boolean = false,
+    ): String = "withdrawal/$previousBalancePaisa/$newBalancePaisa/$isTyped"
     fun transfer(goalId: String): String = "transfer/$goalId"
     fun deleteGoal(goalId: String): String = "delete_goal/$goalId"
 }
@@ -271,8 +278,10 @@ fun PiPlannerNavHost(
                 onOpenCreditEntry = { entryId ->
                     navController.navigate(PiPlannerRoutes.creditEntry(entryId))
                 },
-                onOpenWithdrawalStub = {
-                    navController.navigate(PiPlannerRoutes.WITHDRAWAL_STUB)
+                onOpenWithdrawal = { previous, newBalance, isTyped ->
+                    navController.navigate(
+                        PiPlannerRoutes.withdrawal(previous, newBalance, isTyped),
+                    )
                 },
                 onOpenStandingSplit = {
                     navController.navigate(PiPlannerRoutes.STANDING_SPLIT)
@@ -298,12 +307,24 @@ fun PiPlannerNavHost(
                 onDone = { navController.popBackStack() },
             )
         }
-        composable(PiPlannerRoutes.WITHDRAWAL_STUB) {
-            GoalActionStubScreen(
-                title = stringResource(R.string.withdrawal_stub_title),
-                body = stringResource(R.string.withdrawal_stub_body),
-                contentDescription = "Withdrawal stub",
-                onBack = { navController.popBackStack() },
+        composable(
+            route = PiPlannerRoutes.WITHDRAWAL,
+            arguments = listOf(
+                navArgument(WithdrawalViewModel.NAV_ARG_PREVIOUS_BALANCE) {
+                    type = NavType.LongType
+                },
+                navArgument(WithdrawalViewModel.NAV_ARG_NEW_BALANCE) {
+                    type = NavType.LongType
+                },
+                navArgument(WithdrawalViewModel.NAV_ARG_IS_TYPED) {
+                    type = NavType.BoolType
+                },
+            ),
+        ) {
+            val viewModel: WithdrawalViewModel = hiltViewModel()
+            WithdrawalScreen(
+                viewModel = viewModel,
+                onDone = { navController.popBackStack() },
             )
         }
         composable(
