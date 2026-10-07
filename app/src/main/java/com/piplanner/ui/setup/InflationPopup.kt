@@ -7,15 +7,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.piplanner.R
@@ -31,8 +38,8 @@ import java.time.LocalDate
 import kotlin.math.roundToInt
 
 /**
- * Inflation rate sheet — design frame 7. Default 7% with live adjusted target.
- * Visual parity (PIP-80): PiSheet chrome, ± stepper, live targets, “Use this rate” CTA.
+ * Inflation rate sheet — design frame 7. Default 5% with typed rate + live adjusted target.
+ * PIP-110: editable numeric field is primary; −/+ steppers are optional extras.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,10 +53,50 @@ fun InflationPopup(
     onDone: () -> Unit,
 ) {
     // targetPaisa / dates kept for call-site API parity; live ₹ is preformatted by the host.
-    val percent = (inflationRate * 100.0).roundToInt().coerceIn(0, 30)
+    var rateText by remember {
+        mutableStateOf(GoalValidationService.inflationPercentText(inflationRate))
+    }
+    var rateError by remember { mutableStateOf(false) }
+
+    fun commitPercent(percent: Int) {
+        val bounded = percent.coerceIn(
+            GoalValidationService.MIN_INFLATION_PERCENT,
+            GoalValidationService.MAX_INFLATION_PERCENT,
+        )
+        rateText = bounded.toString()
+        rateError = false
+        onRateChange(bounded / 100.0)
+    }
+
+    fun onTypedRate(raw: String) {
+        // Whole-percent digits only (matches prior 0…30 stepper domain).
+        val filtered = raw.filter { it.isDigit() }
+        rateText = filtered
+        val parsed = GoalValidationService.parseInflationPercentInput(filtered)
+        if (parsed != null) {
+            rateError = false
+            onRateChange(parsed)
+        } else {
+            rateError = filtered.isNotEmpty()
+        }
+    }
+
+    fun finish() {
+        val parsed = GoalValidationService.parseInflationPercentInput(rateText)
+        if (parsed == null) {
+            onRateChange(GoalValidationService.DEFAULT_INFLATION_RATE)
+        }
+        onDone()
+    }
+
+    val displayPercent = (inflationRate * 100.0).roundToInt()
+        .coerceIn(
+            GoalValidationService.MIN_INFLATION_PERCENT,
+            GoalValidationService.MAX_INFLATION_PERCENT,
+        )
 
     PiSheet(
-        onDismissRequest = onDone,
+        onDismissRequest = finish,
         contentDescription = "Inflation sheet",
     ) {
         Text(
@@ -66,7 +113,7 @@ fun InflationPopup(
 
         Column(
             verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12),
-            modifier = Modifier.semantics { contentDescription = "inflation.stepper" },
+            modifier = Modifier.semantics { contentDescription = "inflation.rate" },
         ) {
             Text(
                 text = stringResource(R.string.inflation_rate_label),
@@ -81,29 +128,54 @@ fun InflationPopup(
                 LightBlueChip(
                     label = "−",
                     selected = false,
-                    onClick = {
-                        val next = (percent - 1).coerceIn(0, 30)
-                        onRateChange(next / 100.0)
-                    },
+                    onClick = { commitPercent(displayPercent - 1) },
                     contentDescription = "Decrease inflation",
                 )
-                Text(
-                    text = stringResource(R.string.percent_value, percent),
-                    style = PiPlannerTypography.amountHero,
-                    fontWeight = FontWeight.Bold,
-                    color = PiPlannerColors.NavyPrimary,
-                    textAlign = TextAlign.Center,
+                OutlinedTextField(
+                    value = rateText,
+                    onValueChange = ::onTypedRate,
+                    singleLine = true,
+                    isError = rateError,
+                    suffix = {
+                        Text(
+                            text = "%",
+                            style = PiPlannerTypography.title,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PiPlannerColors.NavyPrimary,
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    colors = goalFormFieldColors(),
+                    supportingText = if (rateError) {
+                        {
+                            Text(
+                                text = stringResource(R.string.inflation_rate_error),
+                                color = PiPlannerColors.Behind,
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    textStyle = PiPlannerTypography.amountHero.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PiPlannerColors.NavyPrimary,
+                        textAlign = TextAlign.Center,
+                    ),
                     modifier = Modifier
-                        .widthIn(min = 72.dp)
-                        .semantics { contentDescription = "Inflation $percent percent" },
+                        .weight(1f)
+                        .widthIn(min = 96.dp)
+                        .semantics {
+                            contentDescription = if (rateError) {
+                                "Inflation rate invalid"
+                            } else {
+                                "Inflation $displayPercent percent"
+                            }
+                        },
                 )
                 LightBlueChip(
                     label = "+",
                     selected = false,
-                    onClick = {
-                        val next = (percent + 1).coerceIn(0, 30)
-                        onRateChange(next / 100.0)
-                    },
+                    onClick = { commitPercent(displayPercent + 1) },
                     contentDescription = "Increase inflation",
                 )
             }
@@ -138,7 +210,7 @@ fun InflationPopup(
 
         PrimaryCta(
             text = stringResource(R.string.use_this_rate),
-            onClick = onDone,
+            onClick = finish,
             contentDescription = "Use this rate",
         )
     }

@@ -215,7 +215,7 @@ class StubGrokService(
         /** Design frame 19 suggestion chips. */
         val ASK_CHIPS: List<String> = listOf(
             "What happens if I change the split?",
-            "Why is inflation 7%?",
+            "Why is inflation 5%?",
         )
 
         /** Frame 19c template sentences when Grok is unavailable (iOS AskService parity). */

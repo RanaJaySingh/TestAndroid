@@ -107,7 +107,7 @@ data class GoalDetailUiState(
     val formattedTarget: String = "₹0",
     val formattedAdjustedTarget: String = "₹0",
     val formattedMonthlyNeed: String = "₹0",
-    val inflationPercentLabel: String = "7%",
+    val inflationPercentLabel: String = "5%",
     val sharePercentLabel: String = "0%",
     val startDateLabel: String = "",
     val endDateLabel: String = "",

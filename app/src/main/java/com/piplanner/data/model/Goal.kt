@@ -14,7 +14,7 @@ import kotlin.math.round
 /**
  * Shared contract — Spec §3.1 Goal.
  * [targetAmount] / [savedAmount] are Long paisa.
- * [inflationRate] defaults to 0.07; [shareOfNewCredits] is 0.0–1.0.
+ * [inflationRate] defaults to 0.05; [shareOfNewCredits] is 0.0–1.0.
  * Dates: ISO-8601 LocalDate (`yyyy-MM-dd`); timestamps: ISO-8601 Instant.
  */
 @Serializable
@@ -73,7 +73,7 @@ data class Goal(
     }
 
     companion object {
-        const val DEFAULT_INFLATION_RATE: Double = 0.07
+        const val DEFAULT_INFLATION_RATE: Double = 0.05
         private const val DAYS_PER_YEAR: Double = 365.25
         private const val DAYS_PER_MONTH: Double = 30.4375
     }

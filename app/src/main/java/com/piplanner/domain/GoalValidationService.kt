@@ -190,8 +190,32 @@ class GoalValidationService @Inject constructor(
     }
 
     companion object {
-        /** Default inflation rate — 7% (PRD R5 / frame 7). */
+        /** Default inflation rate — 5% (PIP-110; was 7%). */
         const val DEFAULT_INFLATION_RATE: Double = Goal.DEFAULT_INFLATION_RATE
+
+        /** Inclusive percent bounds for the Inflation sheet typed rate. */
+        const val MIN_INFLATION_PERCENT: Int = 0
+        const val MAX_INFLATION_PERCENT: Int = 30
+
+        /**
+         * Parses a typed whole-percent string (e.g. `"5"`) into a 0.0–1.0 rate.
+         * Returns null when empty, non-numeric, non-integer, or outside
+         * [MIN_INFLATION_PERCENT]…[MAX_INFLATION_PERCENT].
+         */
+        fun parseInflationPercentInput(raw: String): Double? {
+            val trimmed = raw.trim()
+            if (trimmed.isEmpty()) return null
+            val percent = trimmed.toIntOrNull() ?: return null
+            if (percent < MIN_INFLATION_PERCENT || percent > MAX_INFLATION_PERCENT) return null
+            return percent / 100.0
+        }
+
+        /** Whole-percent display string for [rate] (0.0–1.0). */
+        fun inflationPercentText(rate: Double): String =
+            displayPercentStatic(rate).toString()
+
+        private fun displayPercentStatic(fromFraction: Double): Int =
+            round(fromFraction * 100.0).toInt()
 
         /** Proposal / defined-goals footer label (frame 5b). */
         const val CHECKED_BY_LABEL: String = StubGrokService.CHECKED_BY_LABEL
