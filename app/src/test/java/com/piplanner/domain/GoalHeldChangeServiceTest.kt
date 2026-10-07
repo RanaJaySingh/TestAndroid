@@ -21,8 +21,10 @@ class GoalHeldChangeServiceTest {
 
     @Before
     fun setUp() {
+        val opening = OpeningSplitService()
         service = GoalHeldChangeService(
-            goalValidationService = GoalValidationService(OpeningSplitService()),
+            goalValidationService = GoalValidationService(opening),
+            standingSplitService = StandingSplitService(opening),
         )
     }
 

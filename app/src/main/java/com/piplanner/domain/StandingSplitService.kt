@@ -9,14 +9,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Standing split (frame 15) — PRD R12 / R22 / R24, Spec BR-2.
+ * Standing split (frame 15) — PRD R12 / R13 / R22 / R24, Spec BR-2 / BR-4 / BR-9.
  *
  * Reusable for PIP-54 (delete renormalize) and PIP-48 ("Use this split" / next-credit defaults).
  * Persists [AppState.standingSplits] and mirrors shares onto [Goal.shareOfNewCredits].
  * Does not rewrite History or change saved amounts ("Saved money stays put").
  *
  * Hosts [percentagesForNextCredit] for Sync / credit entry defaults (PIP-48),
- * delegating single-goal and 100% checks to [OpeningSplitService] where shared.
+ * equal / renormalize / apply helpers for delete (PIP-54), and the Standing split
+ * screen (PIP-52). Delegates single-goal and 100% checks to [OpeningSplitService]
+ * where shared.
  */
 @Singleton
 class StandingSplitService @Inject constructor(
@@ -238,6 +240,121 @@ class StandingSplitService @Inject constructor(
             percentages = singleGoalPercentages(goal.id),
             nowIso = nowIso,
         )
+    }
+
+    /** Equal shares across [goalIds] that sum to exactly 1.0 (largest-remainder on basis points). */
+    fun equalSplits(goalIds: List<String>): List<StandingSplit> {
+        if (goalIds.isEmpty()) return emptyList()
+        if (goalIds.size == 1) {
+            return listOf(StandingSplit(goalId = goalIds.first(), percentage = 1.0))
+        }
+        val fractions = equalFractions(goalIds.size)
+        return goalIds.mapIndexed { index, id ->
+            StandingSplit(goalId = id, percentage = fractions[index].toDouble())
+        }
+    }
+
+    /**
+     * Renormalizes standing split after [removedGoalId] is deleted (BR-9 / R13).
+     * - Zero remaining → empty
+     * - One remaining → 100%
+     * - Else proportional to prior shares among survivors; if prior sum is 0 → equal
+     */
+    fun renormalizeAfterRemoving(
+        splits: List<StandingSplit>,
+        removedGoalId: String,
+    ): List<StandingSplit> {
+        val remaining = splits.filter { it.goalId != removedGoalId }
+        if (remaining.isEmpty()) return emptyList()
+        if (remaining.size == 1) {
+            return listOf(StandingSplit(goalId = remaining.first().goalId, percentage = 1.0))
+        }
+
+        val fractions = remaining.map { BigDecimal.valueOf(it.percentage) }
+        val total = fractions.fold(BigDecimal.ZERO) { acc, value -> acc.add(value) }
+            .setScale(8, RoundingMode.HALF_UP)
+        if (total.compareTo(BigDecimal.ZERO) == 0) {
+            return equalSplits(remaining.map { it.goalId })
+        }
+
+        val renormalized = fractions.map { fraction ->
+            fraction.divide(total, 8, RoundingMode.HALF_UP)
+        }
+        val snapped = snapToHundred(renormalized)
+        return remaining.mapIndexed { index, split ->
+            StandingSplit(goalId = split.goalId, percentage = snapped[index].toDouble())
+        }
+    }
+
+    /** Replaces standing shares with equal distribution (frame 17d mid-delete create). */
+    fun resetToEqual(goalIds: List<String>): List<StandingSplit> = equalSplits(goalIds)
+
+    /** Insert or update one goal’s standing share (shared with Goal edit / PIP-52). */
+    fun upsert(
+        splits: List<StandingSplit>,
+        goalId: String,
+        percentage: Double,
+    ): List<StandingSplit> {
+        if (splits.none { it.goalId == goalId }) {
+            return splits + StandingSplit(goalId = goalId, percentage = percentage)
+        }
+        return splits.map {
+            if (it.goalId == goalId) it.copy(percentage = percentage) else it
+        }
+    }
+
+    fun isValidHundred(splits: List<StandingSplit>): Boolean {
+        if (splits.isEmpty()) return false
+        return openingSplitService.isValidHundredPercent(
+            splits.map { BigDecimal.valueOf(it.percentage) },
+        )
+    }
+
+    /** Copies standing percentages onto matching goals’ [Goal.shareOfNewCredits]. */
+    fun applySharesToGoals(goals: List<Goal>, splits: List<StandingSplit>, nowIso: String): List<Goal> {
+        val byId = splits.associateBy { it.goalId }
+        return goals.map { goal ->
+            val share = byId[goal.id]?.percentage ?: goal.shareOfNewCredits
+            goal.copy(shareOfNewCredits = share, updatedAt = nowIso)
+        }
+    }
+
+    /** Display percents 0…100 that sum to 100 for [count] goals. */
+    fun equalDisplayPercents(count: Int): List<Int> {
+        if (count <= 0) return emptyList()
+        if (count == 1) return listOf(100)
+        val base = 100 / count
+        var remainder = 100 - (base * count)
+        return List(count) {
+            val extra = if (remainder > 0) 1 else 0
+            if (remainder > 0) remainder -= 1
+            base + extra
+        }
+    }
+
+    private fun equalFractions(count: Int): List<BigDecimal> {
+        val percents = equalDisplayPercents(count)
+        return percents.map {
+            BigDecimal.valueOf(it.toLong()).divide(BigDecimal("100"), 4, RoundingMode.HALF_UP)
+        }
+    }
+
+    /** Snap fractions so they sum to exactly 1.0000 (basis-point largest remainder). */
+    private fun snapToHundred(fractions: List<BigDecimal>): List<BigDecimal> {
+        if (fractions.isEmpty()) return emptyList()
+        val basis = fractions.map {
+            it.multiply(BigDecimal("10000")).setScale(0, RoundingMode.DOWN).toLong()
+        }.toMutableList()
+        var leftover = 10_000L - basis.sum()
+        var index = 0
+        while (leftover > 0 && index < basis.size) {
+            basis[index] += 1
+            leftover -= 1
+            index += 1
+        }
+        return basis.map {
+            BigDecimal.valueOf(it).divide(BigDecimal("10000"), 4, RoundingMode.HALF_UP)
+        }
     }
 
     companion object {

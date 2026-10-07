@@ -3,7 +3,6 @@ package com.piplanner.domain
 import com.piplanner.data.model.AppState
 import com.piplanner.data.model.HeldGoalChange
 import com.piplanner.data.model.HistoryEntry
-import com.piplanner.data.model.StandingSplit
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,6 +32,7 @@ class GoalHeldChangeException(
 @Singleton
 class GoalHeldChangeService @Inject constructor(
     private val goalValidationService: GoalValidationService,
+    private val standingSplitService: StandingSplitService,
 ) {
 
     /** Frame 9c toast — acceptance copy for PIP-50. */
@@ -104,7 +104,11 @@ class GoalHeldChangeService @Inject constructor(
         )
 
         val nextGoals = state.goals.map { if (it.id == goalId) updatedGoal else it }
-        val nextSplits = upsertStandingSplit(state.standingSplits, goalId, draft.shareOfNewCredits)
+        val nextSplits = standingSplitService.upsert(
+            splits = state.standingSplits,
+            goalId = goalId,
+            percentage = draft.shareOfNewCredits,
+        )
         val nextHeld = state.heldGoalChanges
             .filterNot { it.goalId == goalId } +
             HeldGoalChange(goalId = goalId, savedAt = nowIso)
@@ -121,19 +125,6 @@ class GoalHeldChangeService @Inject constructor(
     fun clearHeldChanges(state: AppState): AppState {
         if (state.heldGoalChanges.isEmpty()) return state
         return state.copy(heldGoalChanges = emptyList())
-    }
-
-    private fun upsertStandingSplit(
-        splits: List<StandingSplit>,
-        goalId: String,
-        percentage: Double,
-    ): List<StandingSplit> {
-        if (splits.none { it.goalId == goalId }) {
-            return splits + StandingSplit(goalId = goalId, percentage = percentage)
-        }
-        return splits.map {
-            if (it.goalId == goalId) it.copy(percentage = percentage) else it
-        }
     }
 
     private fun parseDateOrThrow(value: String, field: String): LocalDate {
