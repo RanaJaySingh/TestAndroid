@@ -38,7 +38,7 @@ Delete goal with money reassignment and standing-split renormalization (PRD R13,
 
 ## Base / rebase
 
-Rebased onto `main@7830826` (PIP-46 Goals tab). Entry remains Goal detail Delete.
+Rebased onto `main@f2e95c2` (PIP-48 Sync / credit entry). Entry remains Goal detail Delete.
 
 ## GTS Review round 1 fixes
 
@@ -51,7 +51,7 @@ Rebased onto `main@7830826` (PIP-46 Goals tab). Entry remains Goal detail Delete
 
 ## Test result
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-2 Done@100% gate).
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-2 Done@100% gate; rebased onto `main@f2e95c2`).
 
 ## Assumptions
 
