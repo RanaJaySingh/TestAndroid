@@ -200,6 +200,8 @@ class GoalsViewModelTest {
         assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.creditEntry("entry-1"))
             .isEqualTo("credit_entry/entry-1")
         assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.SETTINGS).isEqualTo("settings")
+        assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.SETTINGS_CONSENT)
+            .isEqualTo("settings_consent")
         assertThat(com.piplanner.ui.navigation.PiPlannerRoutes.GOALS_TAB).isEqualTo("goals_tab")
     }
 

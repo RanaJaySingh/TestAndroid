@@ -41,8 +41,16 @@ class ConsentViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ConsentUiState())
     val uiState: StateFlow<ConsentUiState> = _uiState.asStateFlow()
 
+    /**
+     * When true (setup): Yes fetches mock opening balance and persists it.
+     * When false (Settings Off→On / PIP-62): Yes persists `consentAutoUpdate` only —
+     * leave dedicated balance for Goals Sync (iOS PIP-61 parity).
+     */
+    private var fetchesBalanceOnYes: Boolean = true
+
     /** Seeds accounts from Accounts screen before Consent actions. */
-    fun configure(accounts: List<Account>) {
+    fun configure(accounts: List<Account>, fetchesBalanceOnYes: Boolean = true) {
+        this.fetchesBalanceOnYes = fetchesBalanceOnYes
         _uiState.update {
             it.copy(
                 accounts = accounts,
@@ -54,8 +62,10 @@ class ConsentViewModel @Inject constructor(
     /**
      * Loads persisted accounts (dedicated selection from Accounts Continue).
      * Falls back to demo accounts with HDFC dedicated when none are persisted.
+     *
+     * @param fetchesBalanceOnYes setup default true; Settings re-consent passes false.
      */
-    fun loadAccounts() {
+    fun loadAccounts(fetchesBalanceOnYes: Boolean = true) {
         viewModelScope.launch {
             val persisted = repository.loadState().accounts
             val accounts = when {
@@ -64,7 +74,7 @@ class ConsentViewModel @Inject constructor(
                     account.copy(isDedicated = account.id == DemoData.DEMO_SAVINGS_ACCOUNT_ID)
                 }
             }
-            configure(accounts)
+            configure(accounts = accounts, fetchesBalanceOnYes = fetchesBalanceOnYes)
         }
     }
 
@@ -86,7 +96,11 @@ class ConsentViewModel @Inject constructor(
 
     // MARK: - Consent (3)
 
-    /** Yes path — fetch demo balance (3a), persist `consentAutoUpdate = true`. */
+    /**
+     * Yes path.
+     * Setup (`fetchesBalanceOnYes`): fetch demo balance (3a), persist balance + consent On.
+     * Settings Off→On: persist `consentAutoUpdate = true` only — do not overwrite balance.
+     */
     fun chooseConsentYes() {
         val dedicated = dedicatedAccountService.dedicatedAccount(_uiState.value.accounts)
         if (dedicated == null) {
@@ -99,6 +113,20 @@ class ConsentViewModel @Inject constructor(
 
         _uiState.update { it.copy(isWorking = true, errorMessage = null) }
         viewModelScope.launch {
+            if (!fetchesBalanceOnYes) {
+                // Settings re-consent (20b) — iOS PIP-61: confirmConsentOn / fetchesBalanceOnYes=false.
+                persistConsentFlag(autoUpdate = true)
+                _uiState.update {
+                    it.copy(
+                        isWorking = false,
+                        consentAutoUpdate = true,
+                        resolvedBalancePaisa = null,
+                        shouldShowFetchedBalance = true,
+                    )
+                }
+                return@launch
+            }
+
             val result = balanceSync.fetchBalance(dedicated.id)
             result.fold(
                 onSuccess = { paisa ->

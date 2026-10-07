@@ -62,6 +62,34 @@ class ConsentViewModelTest {
             .isEqualTo("₹1,00,000")
     }
 
+    /**
+     * PIP-62 / iOS PIP-61 parity: Settings Off→On Yes persists consent only.
+     * Must not overwrite dedicated balance with setup mock ₹1,00,000 (10_000_000 paisa).
+     */
+    @Test
+    fun settingsConsentYes_persistsConsentWithoutOverwritingBalance() = runTest(dispatcher) {
+        val customBalance = 12_345_678L // not DEMO_BALANCE / ₹1,00,000
+        val accounts = dedicatedAccounts().map { account ->
+            if (account.isDedicated) account.copy(balance = customBalance) else account
+        }
+        persistence.saveState(AppState(accounts = accounts, hasCompletedSetup = true))
+        viewModel.configure(accounts = accounts, fetchesBalanceOnYes = false)
+
+        viewModel.chooseConsentYes()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.consentAutoUpdate).isTrue()
+        assertThat(state.shouldShowFetchedBalance).isTrue()
+        assertThat(state.resolvedBalancePaisa).isNull()
+
+        val dedicated = persistence.loadState().accounts.single { it.isDedicated }
+        assertThat(dedicated.consentAutoUpdate).isTrue()
+        assertThat(dedicated.balance).isEqualTo(customBalance)
+        assertThat(dedicated.balance).isNotEqualTo(MockBalanceSyncService.DEMO_BALANCE_PAISA)
+        assertThat(dedicated.balance).isNotEqualTo(10_000_000L)
+    }
+
     @Test
     fun consentNo_clearsResolvedBalance_andShowsUpdateSheet() = runTest(dispatcher) {
         viewModel.chooseConsentNo()
