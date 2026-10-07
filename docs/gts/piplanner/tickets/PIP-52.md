@@ -1,6 +1,6 @@
 # PIP-52 — Android Standing split screen
 
-**Status:** Implemented (pending CI)  
+**Status:** Implemented — `./gradlew assembleDebug test` BUILD SUCCESSFUL  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-52/android-implement-standing-split-screen  
 **PRD:** R12 — Standing split always usable at 100% · https://docs.google.com/document/d/16cthPNS-djP0KLlH9Lak3OTDrottiD5bMnTJwW_cRDc/edit  
 **Spec:** Section 3.2 BR-2, Section 5 · https://docs.google.com/document/d/1xg3FrN6802Ya8hEoiwiuE-Id3m-fPCHN929bVr0FW_k/edit  
