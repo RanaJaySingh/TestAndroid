@@ -503,8 +503,10 @@ fun PiPlannerNavHost(
                 viewModel.loadAccounts(fetchesBalanceOnYes = false)
             }
             // Frame 20b — re-consent from Settings; Yes/No return without setup handoff.
+            // Hide setup step chrome (visual R7 / iOS PIP-75 parity).
             ConsentSheet(
                 viewModel = viewModel,
+                showsSetupStep = false,
                 onYesFetched = {
                     navController.popBackStack(PiPlannerRoutes.SETTINGS, inclusive = false)
                 },

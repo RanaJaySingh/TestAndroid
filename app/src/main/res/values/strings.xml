@@ -11,6 +11,8 @@
     <string name="accounts_step_label">Step 1 of 3</string>
     <string name="accounts_title">Choose your Dedicated savings</string>
     <string name="accounts_subtitle">Exactly one account can be Dedicated. Credits to that account are assigned to goals.</string>
+    <string name="accounts_role_savings">Savings</string>
+    <string name="accounts_role_spending">Spending</string>
     <string name="accounts_spending_note">Spending account — everyday payments are not seen in PiPlanner.</string>
     <string name="dedicated_savings_label">Dedicated</string>
     <string name="continue_label">Continue</string>
