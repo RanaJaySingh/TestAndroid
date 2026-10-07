@@ -178,6 +178,14 @@ class SettingsViewModelTest {
         assertThat(persistence.loadState().history).isEmpty()
         assertThat(persistence.loadState().standingSplits).isEmpty()
         assertThat(persistence.loadState().hasCompletedSetup).isFalse()
+        // PIP-66: post-reset empty ledger matches first-launch; Accounts reseeds via sampleAccounts().
+        assertThat(DemoData.isFirstLaunchOrPostReset(persistence.loadState())).isTrue()
+        assertThat(DemoData.initializeDemo().accounts.map { it.id })
+            .containsExactly(
+                DemoData.DEMO_SAVINGS_ACCOUNT_ID,
+                DemoData.DEMO_SPENDING_ACCOUNT_ID,
+            )
+            .inOrder()
     }
 
     @Test
