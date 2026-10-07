@@ -1,6 +1,6 @@
 # PIP-90 — Android Standing split, Transfer, Withdrawal, Delete sheets visual
 
-**Status:** Implemented on `PIP-90-sheets-visual` (from `33b810b` / PIP-70)  
+**Status:** Implemented on `PIP-90-sheets-visual` (rebased onto `1fcbdff` / PIP-74; prefers main for PIP-68/70/72 shared tokens/icons/chrome)  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-90/android-standing-split-transfer-withdrawal-delete-sheets-visual  
 **PRD:** R14 (+ Delete frame 17) · https://docs.google.com/document/d/18r0wSKMTpePcjCRYypcKbtabghuCyd_TPGWhLEee0AU/edit  
 **Spec:** §5.2 J3–J5 · https://docs.google.com/document/d/1pvhxAPCyLrLIzEBNkiUh5-lOA8y7onLiTgl_eJTnlhk/edit  
