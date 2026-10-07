@@ -13,6 +13,8 @@ data class AppState(
     val history: List<HistoryEntry> = emptyList(),
     val standingSplits: List<StandingSplit> = emptyList(),
     val hasCompletedSetup: Boolean = false,
+    /** Goal field / share edits waiting for next credit (BR-4 / R11 / R24). */
+    val heldGoalChanges: List<HeldGoalChange> = emptyList(),
 ) {
     companion object {
         val EMPTY: AppState = AppState()
