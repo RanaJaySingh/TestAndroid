@@ -123,6 +123,11 @@
     <string name="save_changes">Save changes</string>
 
     <string name="goal_detail_missing">This goal is no longer available.</string>
+    <string name="goal_detail_saved_caption">Saved</string>
+    <string name="goal_detail_adjusted_target">Adjusted target</string>
+    <string name="goal_detail_percent_reached">% reached</string>
+    <string name="goal_detail_start">Start</string>
+    <string name="goal_detail_end">End</string>
     <string name="goal_saved_amount_label">Saved amount</string>
     <string name="goal_status_label">Status</string>
     <string name="goal_dates_label">Dates</string>
