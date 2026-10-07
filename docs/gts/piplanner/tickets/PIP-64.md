@@ -1,6 +1,6 @@
 # PIP-64 — Android Ask tab with Grok answers and proposals
 
-**Status:** Implemented on `PIP-64-ask` (rebased onto `57e25d9` / PIP-60 History; keep-both with History tab + Ask)  
+**Status:** Implemented on `PIP-64-ask` (rebased onto `edb62e3` / PIP-66 Demo; keep-both with Demo seeding + History + Ask)  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-64/android-implement-ask-tab-with-grok-answers-and-proposals  
 **PRD:** R18 (Ask answers and proposal cards), R19 (Grok unavailable and invalid draft fallbacks) · https://docs.google.com/document/d/16cthPNS-djP0KLlH9Lak3OTDrottiD5bMnTJwW_cRDc/edit  
 **Spec:** Section 3.3 GrokService, Section 5 · https://docs.google.com/document/d/1xg3FrN6802Ya8hEoiwiuE-Id3m-fPCHN929bVr0FW_k/edit  
