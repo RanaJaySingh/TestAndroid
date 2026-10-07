@@ -111,7 +111,8 @@ class OpeningSplitViewModelTest {
         val state = readOnlyVm.uiState.value
         assertThat(state.isReadOnly).isTrue()
         assertThat(state.canLock).isFalse()
-        assertThat(state.statusMessage).isEqualTo(OpeningSplitService.LOCKED_AMOUNTS_CAPTION)
+        assertThat(state.statusMessage)
+            .isEqualTo(com.piplanner.domain.HistoryService.ORIGINAL_AMOUNTS_CAPTION)
     }
 
     private class FakePersistence : PersistenceService {

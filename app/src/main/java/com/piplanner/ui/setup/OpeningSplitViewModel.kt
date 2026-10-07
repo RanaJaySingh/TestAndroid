@@ -6,6 +6,7 @@ import com.piplanner.data.model.Goal
 import com.piplanner.data.model.HistoryEntry
 import com.piplanner.data.repository.PiPlannerRepository
 import com.piplanner.domain.FormattingService
+import com.piplanner.domain.HistoryService
 import com.piplanner.domain.OpeningSplitException
 import com.piplanner.domain.OpeningSplitService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -118,6 +119,19 @@ class OpeningSplitViewModel @Inject constructor(
             initialPercents = percents,
             lockedEntry = entry,
         )
+        // History frame 12a uses BR-3 copy (distinct from setup lock caption).
+        _uiState.update {
+            it.copy(statusMessage = HistoryService.ORIGINAL_AMOUNTS_CAPTION)
+        }
+    }
+
+    /** Loads a locked Opening balance entry from History for read-only viewing. */
+    fun loadLockedOpeningFromHistory(entryId: String) {
+        viewModelScope.launch {
+            val state = repository.loadState()
+            val entry = state.history.firstOrNull { it.id == entryId } ?: return@launch
+            configureReadOnly(entry, state.goals)
+        }
     }
 
     fun setDisplayPercent(goalId: String, percent: Int) {
