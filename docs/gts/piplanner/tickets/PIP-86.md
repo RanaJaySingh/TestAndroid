@@ -41,11 +41,11 @@ Restyle of History credit-entry open / locked / typed treatments to design badge
 
 ## Parallel work / base
 
-Started from `33b810b` (PIP-70); rebased onto `1fcbdff` (PIP-74 Welcome; includes PIP-72 icons); keep-both rebased onto `1f3bb8fa` (PIP-94 Settings tip — includes PIP-80/88/84). Prefer main for shared tokens/icons/chrome/`PiCard`; keep PIP-86 CreditEntry / HistoryEntryDetail / EntryBadge visuals. Clean rebase (conflict files overlapped only `strings.xml` hunks — auto-kept both). Touches credit-entry / history-detail entry files + shared `EntryBadge`. No ViewModel / Service / History list row changes (list chrome is PIP-92).
+Started from `33b810b` (PIP-70); rebased onto `1fcbdff` (PIP-74); keep-both onto `1f3bb8fa` (PIP-94); keep-both onto `1a77a3b8` (PIP-90 sheets tip). Prefer main for shared tokens/icons/chrome/`PiCard`; keep PIP-86 CreditEntry / HistoryEntryDetail / EntryBadge visuals. Clean rebases (PIP-90 sheets paths disjoint; no conflict hunks). Touches credit-entry / history-detail entry files + shared `EntryBadge`. No ViewModel / Service / History list row changes (list chrome is PIP-92).
 
 ## Test results
 
-`./gradlew assembleDebug test` — re-run after tip rebase onto `1f3bb8fa` (includes `CreditEntryServiceTest`, `HistoryDetailViewModelTest`, `HistoryEntryVisualTest`).
+`./gradlew assembleDebug test` — re-run after tip rebase onto `1a77a3b8` (includes `CreditEntryServiceTest`, `HistoryDetailViewModelTest`, `HistoryEntryVisualTest`).
 
 ## How to run tests
 
