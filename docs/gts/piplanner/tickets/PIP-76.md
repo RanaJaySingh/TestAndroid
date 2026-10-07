@@ -62,11 +62,11 @@ Compare device/emulator (or Compose previews) to design artifact:
 
 ## Parallel work / base
 
-Started from `33b810ba` (main after PIP-70 #20). Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, components foundation, Welcome (PIP-74), Update/UPI (PIP-78).
+Started from `33b810ba` (main after PIP-70 #20). Rebased onto `1fcbdff7` (main after PIP-74 #22 / PIP-72 #21). Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, components foundation, Welcome (PIP-74), Update/UPI (PIP-78).
 
 ## Test results
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (local; includes `AccountsConsentVisualTest` + existing behaviour suites).
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** after rebase onto `1fcbdff7` (includes `AccountsConsentVisualTest` + existing behaviour suites).
 
 ## How to run tests
 
