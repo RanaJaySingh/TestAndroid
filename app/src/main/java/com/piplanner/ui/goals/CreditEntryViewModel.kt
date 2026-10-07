@@ -66,10 +66,11 @@ class CreditEntryViewModel @Inject constructor(
 
     fun setDisplayPercent(goalId: String, percent: Int) {
         val current = _uiState.value
+        val entry = current.entry ?: return
         if (current.isLocked || current.isSingleGoal) return
         val clamped = percent.coerceIn(0, 100)
         val nextPercents = current.displayPercents + (goalId to clamped)
-        rebuildEditable(current.entry, current.goals, nextPercents, current.useThisSplitForStanding)
+        rebuildEditable(entry, current.goals, nextPercents, current.useThisSplitForStanding)
     }
 
     fun setUseThisSplitForStanding(checked: Boolean) {
