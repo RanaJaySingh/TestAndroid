@@ -1,5 +1,6 @@
 package com.piplanner.ui.goals
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,10 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,15 +30,24 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.data.model.Goal
 import com.piplanner.domain.StandingSplitService
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PiSheetHandle
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTheme
 
 /**
- * Standing split screen — design frame 15 (PRD R12).
+ * Standing split screen — design frame 15 (PRD R14 visual).
  * Multi-goal % editor for the next credit; one-goal path skips this UI.
+ * Visual/layout only — allocation logic unchanged (PIP-52).
  */
 @Composable
 fun StandingSplitScreen(
@@ -79,7 +89,8 @@ fun StandingSplitContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .background(PiPlannerColors.BackgroundApp)
+                .padding(PiPlannerDimens.Space16)
                 .semantics { contentDescription = "Standing split skipped" },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -89,7 +100,7 @@ fun StandingSplitContent(
                     stringResource(R.string.standing_split_skip_body)
                 },
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
         return
@@ -98,37 +109,47 @@ fun StandingSplitContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(horizontal = PiPlannerDimens.Space24)
+            .padding(top = PiPlannerDimens.Space12, bottom = PiPlannerDimens.Space28)
             .semantics { contentDescription = "Standing split" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
     ) {
-        TextButton(onClick = onBack) {
-            Text(stringResource(R.string.back))
-        }
+        PiSheetHandle()
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SecondaryCta(
+            text = stringResource(R.string.back),
+            onClick = onBack,
+            style = SecondaryCtaStyle.Text,
+            fillMaxWidth = false,
+            contentDescription = "Back",
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
                 text = stringResource(R.string.standing_split_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
             )
             Text(
                 text = stringResource(R.string.standing_split_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
             Text(
                 text = uiState.caption.ifBlank { StandingSplitService.SAVED_MONEY_STAYS_PUT },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
+                color = PiPlannerColors.NavyPrimary,
                 modifier = Modifier.semantics {
                     contentDescription = "Saved money stays put"
                 },
             )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
             uiState.goals.forEach { goal ->
                 StandingSplitGoalRow(
                     goal = goal,
@@ -142,38 +163,38 @@ fun StandingSplitContent(
             text = uiState.statusMessage,
             style = MaterialTheme.typography.bodyMedium,
             color = if (uiState.canSave) {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                PiPlannerColors.OnSurface.copy(alpha = 0.72f)
             } else {
-                MaterialTheme.colorScheme.tertiary
+                PiPlannerColors.Behind
             },
             modifier = Modifier.semantics {
                 contentDescription = "Standing split status ${uiState.statusMessage}"
             },
         )
 
-        Button(
-            onClick = onSave,
-            enabled = uiState.canSave,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Save standing split" },
-        ) {
-            if (uiState.isSaving) {
+        if (uiState.isSaving) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .height(20.dp)
-                        .width(20.dp),
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Text(
-                    text = stringResource(R.string.save),
-                    fontWeight = FontWeight.SemiBold,
+                        .height(PiPlannerDimens.Space20)
+                        .width(PiPlannerDimens.Space20),
+                    strokeWidth = PiPlannerDimens.Space8 / 4,
+                    color = PiPlannerColors.NavyPrimary,
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        PrimaryCta(
+            text = stringResource(R.string.save),
+            onClick = onSave,
+            enabled = uiState.canSave && !uiState.isSaving,
+            contentDescription = "Save standing split",
+        )
+
+        Spacer(modifier = Modifier.height(PiPlannerDimens.Space8))
     }
 
     uiState.errorMessage?.let { message ->
@@ -196,43 +217,119 @@ private fun StandingSplitGoalRow(
     percent: Int,
     onPercentChange: (Int) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = goal.name,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
+    PiCard(contentDescription = "${goal.name} share row") {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
-                text = stringResource(R.string.share_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = goal.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = percent.toString(),
-                    onValueChange = { raw ->
-                        val digits = raw.filter { it.isDigit() }
-                        onPercentChange(digits.toIntOrNull() ?: 0)
-                    },
-                    modifier = Modifier
-                        .width(88.dp)
-                        .semantics {
-                            contentDescription = "${goal.name} percentage"
-                        },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
-                    text = "%",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 8.dp),
+                    text = stringResource(R.string.share_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                 )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = percent.toString(),
+                        onValueChange = { raw ->
+                            val digits = raw.filter { it.isDigit() }
+                            onPercentChange(digits.toIntOrNull() ?: 0)
+                        },
+                        modifier = Modifier
+                            .width(PiPlannerDimens.Space28 * 3)
+                            .semantics {
+                                contentDescription = "${goal.name} percentage"
+                            },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PiPlannerColors.NavyPrimary,
+                            cursorColor = PiPlannerColors.NavyPrimary,
+                        ),
+                    )
+                    Text(
+                        text = "%",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = PiPlannerColors.OnSurface,
+                        modifier = Modifier.padding(start = PiPlannerDimens.Space8),
+                    )
+                }
             }
         }
     }
+}
+
+@Preview(showBackground = true, name = "Standing split · valid 100%")
+@Composable
+private fun StandingSplitValidPreview() {
+    PiPlannerTheme {
+        StandingSplitContent(
+            uiState = StandingSplitUiState(
+                goals = previewGoals(),
+                displayPercents = mapOf("g1" to 60, "g2" to 40),
+                statusMessage = "Total 100% — ready to save",
+                canSave = true,
+                caption = StandingSplitService.SAVED_MONEY_STAYS_PUT,
+            ),
+            onPercentChange = { _, _ -> },
+            onSave = {},
+            onBack = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Standing split · invalid total")
+@Composable
+private fun StandingSplitInvalidPreview() {
+    PiPlannerTheme {
+        StandingSplitContent(
+            uiState = StandingSplitUiState(
+                goals = previewGoals(),
+                displayPercents = mapOf("g1" to 60, "g2" to 30),
+                statusMessage = "Total 90% — need 100%",
+                canSave = false,
+                caption = StandingSplitService.SAVED_MONEY_STAYS_PUT,
+            ),
+            onPercentChange = { _, _ -> },
+            onSave = {},
+            onBack = {},
+            onDismissError = {},
+        )
+    }
+}
+
+private fun previewGoals(): List<Goal> {
+    val now = "2026-01-01T00:00:00Z"
+    return listOf(
+        Goal(
+            id = "g1",
+            name = "Emergency",
+            targetAmount = 20_000_000L,
+            startDate = "2026-01-01",
+            endDate = "2027-01-01",
+            savedAmount = 4_000_000L,
+            shareOfNewCredits = 0.6,
+            createdAt = now,
+            updatedAt = now,
+        ),
+        Goal(
+            id = "g2",
+            name = "Vacation",
+            targetAmount = 10_000_000L,
+            startDate = "2026-01-01",
+            endDate = "2026-12-01",
+            savedAmount = 2_000_000L,
+            shareOfNewCredits = 0.4,
+            createdAt = now,
+            updatedAt = now,
+        ),
+    )
 }

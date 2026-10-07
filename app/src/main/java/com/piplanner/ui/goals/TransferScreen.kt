@@ -1,5 +1,6 @@
 package com.piplanner.ui.goals
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -12,16 +13,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,16 +37,26 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.data.model.Goal
 import com.piplanner.domain.TransferPhase
 import com.piplanner.domain.TransferService
+import com.piplanner.ui.components.LightBlueChip
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PiSheetHandle
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTheme
 
 /**
- * Transfer between goals — design frames 16 / 16a / 16b / 16c (PRD R14).
- * From/To selectors, amount + chips, after-transfer preview, Move gating.
+ * Transfer between goals — design frames 16 / 16b (PRD R14 visual).
+ * From/To selectors, amount + light-blue chips, after-transfer preview, Move gating.
+ * Visual/layout only — validation/ledger unchanged (PIP-56).
  */
 @Composable
 fun TransferScreen(
@@ -94,11 +104,12 @@ fun TransferContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(PiPlannerColors.BackgroundApp)
                 .semantics { contentDescription = "Transfer loading" },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = PiPlannerColors.NavyPrimary)
         }
         return
     }
@@ -106,25 +117,34 @@ fun TransferContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(horizontal = PiPlannerDimens.Space24)
+            .padding(top = PiPlannerDimens.Space12, bottom = PiPlannerDimens.Space28)
             .semantics { contentDescription = "Transfer screen" },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
     ) {
-        TextButton(onClick = onBack) {
-            Text(stringResource(R.string.back))
-        }
+        PiSheetHandle()
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SecondaryCta(
+            text = stringResource(R.string.back),
+            onClick = onBack,
+            style = SecondaryCtaStyle.Text,
+            fillMaxWidth = false,
+            contentDescription = "Back",
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
             Text(
                 text = stringResource(R.string.transfer_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
             )
             Text(
                 text = stringResource(R.string.transfer_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
 
@@ -160,6 +180,7 @@ fun TransferContent(
                 {
                     Text(
                         text = TransferService.OVER_AMOUNT_MESSAGE,
+                        color = PiPlannerColors.Destructive,
                         modifier = Modifier.semantics {
                             contentDescription = "Over amount message"
                         },
@@ -168,26 +189,29 @@ fun TransferContent(
             } else {
                 null
             },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PiPlannerColors.NavyPrimary,
+                cursorColor = PiPlannerColors.NavyPrimary,
+                errorBorderColor = PiPlannerColors.Destructive,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics { contentDescription = "Transfer amount field" },
         )
 
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
+            verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
             modifier = Modifier.semantics { contentDescription = "Amount chips" },
         ) {
             uiState.chipAmountsPaisa.forEach { chipPaisa ->
                 val label = formattedAmount(chipPaisa)
-                FilterChip(
+                LightBlueChip(
+                    label = label,
                     selected = uiState.amountPaisa == chipPaisa,
                     onClick = { onChip(chipPaisa) },
                     enabled = uiState.phase != TransferPhase.Complete && !uiState.isMoving,
-                    label = { Text(label) },
-                    modifier = Modifier.semantics {
-                        contentDescription = "Amount chip $label"
-                    },
+                    contentDescription = "Amount chip $label",
                 )
             }
         }
@@ -198,39 +222,41 @@ fun TransferContent(
             val afterFrom = uiState.afterFromSavedPaisa
             val afterTo = uiState.afterToSavedPaisa
             if (from != null && to != null && afterFrom != null && afterTo != null) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.semantics {
-                        contentDescription = "After transfer preview"
-                    },
-                ) {
-                    Text(
-                        text = stringResource(R.string.transfer_after_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.transfer_after_from,
-                            from.name,
-                            formattedAmount(afterFrom),
-                        ),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.semantics {
-                            contentDescription = "After from ${from.name}"
-                        },
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.transfer_after_to,
-                            to.name,
-                            formattedAmount(afterTo),
-                        ),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.semantics {
-                            contentDescription = "After to ${to.name}"
-                        },
-                    )
+                PiCard(contentDescription = "After transfer preview") {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.transfer_after_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PiPlannerColors.OnSurface,
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.transfer_after_from,
+                                from.name,
+                                formattedAmount(afterFrom),
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = PiPlannerColors.OnSurface,
+                            modifier = Modifier.semantics {
+                                contentDescription = "After from ${from.name}"
+                            },
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.transfer_after_to,
+                                to.name,
+                                formattedAmount(afterTo),
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = PiPlannerColors.OnSurface,
+                            modifier = Modifier.semantics {
+                                contentDescription = "After to ${to.name}"
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -239,30 +265,33 @@ fun TransferContent(
             text = uiState.statusMessage,
             style = MaterialTheme.typography.bodyMedium,
             color = if (uiState.isOverAmount) {
-                MaterialTheme.colorScheme.error
+                PiPlannerColors.Destructive
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                PiPlannerColors.OnSurface.copy(alpha = 0.72f)
             },
             modifier = Modifier.semantics {
                 contentDescription = "Transfer status ${uiState.statusMessage}"
             },
         )
 
-        Button(
-            onClick = onMove,
-            enabled = uiState.canMove && !uiState.isMoving,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Move transfer" },
-        ) {
-            if (uiState.isMoving) {
+        if (uiState.isMoving) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.padding(end = 8.dp),
-                    strokeWidth = 2.dp,
+                    color = PiPlannerColors.NavyPrimary,
+                    strokeWidth = PiPlannerDimens.Space8 / 4,
                 )
             }
-            Text(stringResource(R.string.transfer_move))
         }
+
+        PrimaryCta(
+            text = stringResource(R.string.transfer_move),
+            onClick = onMove,
+            enabled = uiState.canMove && !uiState.isMoving,
+            contentDescription = "Move transfer",
+        )
     }
 
     if (uiState.errorMessage != null) {
@@ -307,6 +336,10 @@ private fun GoalSelectorDropdown(
             enabled = enabled,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PiPlannerColors.NavyPrimary,
+                cursorColor = PiPlannerColors.NavyPrimary,
+            ),
             modifier = Modifier
                 .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = enabled)
                 .fillMaxWidth(),
@@ -325,7 +358,7 @@ private fun GoalSelectorDropdown(
                             Text(goal.name)
                             Text(
                                 text = formattedSaved(goal),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                             )
                         }
                     },
@@ -340,4 +373,71 @@ private fun GoalSelectorDropdown(
             }
         }
     }
+}
+
+@Preview(showBackground = true, name = "Transfer · chips + preview")
+@Composable
+private fun TransferPreview() {
+    val goals = transferPreviewGoals()
+    PiPlannerTheme {
+        TransferContent(
+            uiState = TransferUiState(
+                goals = goals,
+                fromGoalId = "g1",
+                toGoalId = "g2",
+                amountRupeeDigits = "5000",
+                amountPaisa = 500_000L,
+                chipAmountsPaisa = listOf(100_000L, 500_000L, 1_000_000L),
+                afterFromSavedPaisa = 3_500_000L,
+                afterToSavedPaisa = 2_500_000L,
+                canMove = true,
+                statusMessage = "Ready to move",
+                phase = TransferPhase.Preview,
+            ),
+            formattedSaved = { "₹${it.savedAmount / 100}" },
+            formattedAmount = { paisa ->
+                when (paisa) {
+                    100_000L -> "₹1,000"
+                    500_000L -> "₹5,000"
+                    1_000_000L -> "₹10,000"
+                    else -> "₹${paisa / 100}"
+                }
+            },
+            onFromSelected = {},
+            onToSelected = {},
+            onAmountDigitsChange = {},
+            onChip = {},
+            onMove = {},
+            onBack = {},
+            onDismissError = {},
+        )
+    }
+}
+
+private fun transferPreviewGoals(): List<Goal> {
+    val now = "2026-01-01T00:00:00Z"
+    return listOf(
+        Goal(
+            id = "g1",
+            name = "Emergency",
+            targetAmount = 20_000_000L,
+            startDate = "2026-01-01",
+            endDate = "2027-01-01",
+            savedAmount = 4_000_000L,
+            shareOfNewCredits = 0.6,
+            createdAt = now,
+            updatedAt = now,
+        ),
+        Goal(
+            id = "g2",
+            name = "Vacation",
+            targetAmount = 10_000_000L,
+            startDate = "2026-01-01",
+            endDate = "2026-12-01",
+            savedAmount = 2_000_000L,
+            shareOfNewCredits = 0.4,
+            createdAt = now,
+            updatedAt = now,
+        ),
+    )
 }

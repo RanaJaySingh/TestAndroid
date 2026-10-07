@@ -1,7 +1,9 @@
 package com.piplanner.ui.goals
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,13 +12,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,12 +34,24 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
+import com.piplanner.data.model.Goal
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PiSheetHandle
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTheme
 
 /**
- * Delete goal screen — design frames 17, 17a–17e (PRD R13, Spec BR-9).
+ * Delete goal screen — design frame 17 (PRD R14 + delete).
+ * Release amount, destination split, destructive confirm layout.
+ * Visual/layout only — reassignment logic unchanged (PIP-54).
  */
 @Composable
 fun DeleteGoalScreen(
@@ -93,66 +110,85 @@ fun DeleteGoalContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(horizontal = PiPlannerDimens.Space24)
+            .padding(top = PiPlannerDimens.Space12, bottom = PiPlannerDimens.Space28)
             .semantics {
                 contentDescription = "Delete goal. Reassign saved money to remaining goals."
             },
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
     ) {
-        TextButton(
+        PiSheetHandle()
+
+        SecondaryCta(
+            text = stringResource(R.string.back),
             onClick = onBack,
-            modifier = Modifier.align(Alignment.Start),
-        ) {
-            Text(stringResource(R.string.back))
-        }
+            style = SecondaryCtaStyle.Text,
+            fillMaxWidth = false,
+            contentDescription = "Back",
+        )
 
         when (uiState.phase) {
             DeleteGoalPhase.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    color = PiPlannerColors.NavyPrimary,
+                )
             }
             DeleteGoalPhase.MissingGoal -> {
                 Text(
                     text = uiState.errorMessage ?: stringResource(R.string.delete_goal_missing),
                     style = MaterialTheme.typography.bodyLarge,
+                    color = PiPlannerColors.OnSurface,
                 )
             }
             else -> {
                 val deletedName = uiState.deletedGoal?.name.orEmpty()
-                Text(
-                    text = stringResource(R.string.delete_goal_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = stringResource(R.string.delete_goal_subtitle, deletedName),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
                     Text(
-                        text = stringResource(R.string.delete_goal_released_label),
-                        style = MaterialTheme.typography.labelLarge,
+                        text = stringResource(R.string.delete_goal_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PiPlannerColors.OnSurface,
                     )
                     Text(
-                        text = uiState.formattedReleasedAmount,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Released amount ${uiState.formattedReleasedAmount}"
-                        },
+                        text = stringResource(R.string.delete_goal_subtitle, deletedName),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                     )
                 }
 
+                PiCard(contentDescription = "Released amount ${uiState.formattedReleasedAmount}") {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(R.string.delete_goal_released_label),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                        )
+                        Text(
+                            text = uiState.formattedReleasedAmount,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PiPlannerColors.NavyPrimary,
+                            modifier = Modifier.semantics {
+                                contentDescription =
+                                    "Released amount ${uiState.formattedReleasedAmount}"
+                            },
+                        )
+                    }
+                }
+
                 if (uiState.isOnlyGoalGate || uiState.showCreateForm) {
-                    ReplacementGoalForm(
-                        draft = uiState.replacementDraft,
-                        onDraftChange = onDraftChange,
-                        onSave = onSaveReplacement,
-                        onCancel = if (uiState.isOnlyGoalGate) null else onHideCreate,
-                        gateCopy = uiState.isOnlyGoalGate,
-                    )
+                    PiCard(contentDescription = "Replacement goal form") {
+                        ReplacementGoalForm(
+                            draft = uiState.replacementDraft,
+                            onDraftChange = onDraftChange,
+                            onSave = onSaveReplacement,
+                            onCancel = if (uiState.isOnlyGoalGate) null else onHideCreate,
+                            gateCopy = uiState.isOnlyGoalGate,
+                        )
+                    }
                 }
 
                 if (uiState.destinationGoals.isNotEmpty()) {
@@ -165,27 +201,26 @@ fun DeleteGoalContent(
                             text = stringResource(R.string.delete_goal_reassign_heading),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
+                            color = PiPlannerColors.OnSurface,
                         )
                         when {
                             uiState.canStartEdit -> {
-                                TextButton(
+                                SecondaryCta(
+                                    text = stringResource(R.string.edit),
                                     onClick = onBeginEdit,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Edit reassignment"
-                                    },
-                                ) {
-                                    Text(stringResource(R.string.edit))
-                                }
+                                    style = SecondaryCtaStyle.Text,
+                                    fillMaxWidth = false,
+                                    contentDescription = "Edit reassignment",
+                                )
                             }
                             uiState.isEditingPercents -> {
-                                TextButton(
+                                SecondaryCta(
+                                    text = stringResource(R.string.done),
                                     onClick = onFinishEdit,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Done editing reassignment"
-                                    },
-                                ) {
-                                    Text(stringResource(R.string.done))
-                                }
+                                    style = SecondaryCtaStyle.Text,
+                                    fillMaxWidth = false,
+                                    contentDescription = "Done editing reassignment",
+                                )
                             }
                         }
                     }
@@ -201,50 +236,60 @@ fun DeleteGoalContent(
                     Text(
                         text = uiState.statusMessage,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (uiState.canConfirm) {
+                            PiPlannerColors.OnSurface.copy(alpha = 0.72f)
+                        } else {
+                            PiPlannerColors.Behind
+                        },
                     )
                     if (uiState.hasEditedOnce) {
                         Text(
                             text = stringResource(R.string.delete_goal_edit_locked_note),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
                         )
                     }
                     if (uiState.resetStandingToEqual) {
                         Text(
                             text = stringResource(R.string.delete_goal_standing_reset_note),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = PiPlannerColors.NavyPrimary,
                         )
                     }
                 }
 
                 if (!uiState.isOnlyGoalGate && !uiState.showCreateForm) {
-                    TextButton(onClick = onShowCreate) {
-                        Text(stringResource(R.string.delete_goal_add_goal))
-                    }
+                    SecondaryCta(
+                        text = stringResource(R.string.delete_goal_add_goal),
+                        onClick = onShowCreate,
+                        style = SecondaryCtaStyle.Text,
+                        fillMaxWidth = false,
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(PiPlannerDimens.Space8))
 
-                Button(
-                    onClick = onConfirmClick,
-                    enabled = uiState.canConfirm && !uiState.isConfirming,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = "Confirm delete goal" },
-                ) {
-                    if (uiState.isConfirming) {
+                if (uiState.isConfirming) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
                         CircularProgressIndicator(
                             modifier = Modifier
-                                .height(20.dp)
-                                .width(20.dp),
-                            strokeWidth = 2.dp,
+                                .height(PiPlannerDimens.Space20)
+                                .width(PiPlannerDimens.Space20),
+                            strokeWidth = PiPlannerDimens.Space8 / 4,
+                            color = PiPlannerColors.Destructive,
                         )
-                    } else {
-                        Text(stringResource(R.string.delete_goal_confirm))
                     }
                 }
+
+                DestructiveCta(
+                    text = stringResource(R.string.delete_goal_confirm),
+                    onClick = onConfirmClick,
+                    enabled = uiState.canConfirm && !uiState.isConfirming,
+                    contentDescription = "Confirm delete goal",
+                )
             }
         }
     }
@@ -264,7 +309,11 @@ fun DeleteGoalContent(
             },
             confirmButton = {
                 TextButton(onClick = onConfirmDelete) {
-                    Text(stringResource(R.string.delete_goal_confirm))
+                    Text(
+                        text = stringResource(R.string.delete_goal_confirm),
+                        color = PiPlannerColors.Destructive,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             },
             dismissButton = {
@@ -291,6 +340,40 @@ fun DeleteGoalContent(
     }
 }
 
+/**
+ * Filled destructive CTA for Delete confirm (frame 17).
+ * Mirrors [PrimaryCta] shape/padding with [PiPlannerColors.Destructive].
+ */
+@Composable
+private fun DestructiveCta(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentDescription: String = text,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { this.contentDescription = contentDescription },
+        shape = RoundedCornerShape(PiPlannerDimens.RadiusChip),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PiPlannerColors.Destructive,
+            contentColor = PiPlannerColors.OnNavy,
+            disabledContainerColor = PiPlannerColors.Destructive.copy(alpha = 0.38f),
+            disabledContentColor = PiPlannerColors.OnNavy.copy(alpha = 0.70f),
+        ),
+        contentPadding = PaddingValues(
+            horizontal = PiPlannerDimens.Space20,
+            vertical = PiPlannerDimens.Space12,
+        ),
+    ) {
+        Text(text = text, fontWeight = FontWeight.SemiBold)
+    }
+}
+
 @Composable
 private fun ReassignmentRow(
     goalName: String,
@@ -299,43 +382,52 @@ private fun ReassignmentRow(
     editable: Boolean,
     onPercentChange: (Int) -> Unit,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Row(
+    PiCard(contentDescription = "$goalName reassignment") {
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
         ) {
-            Text(
-                text = goalName,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = amountLabel,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        }
-        if (editable) {
-            OutlinedTextField(
-                value = percent.toString(),
-                onValueChange = { raw ->
-                    val digits = raw.filter { it.isDigit() }
-                    onPercentChange(digits.toIntOrNull() ?: 0)
-                },
-                label = { Text(stringResource(R.string.share_label)) },
-                suffix = { Text("%") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.percent_value, percent),
-                style = MaterialTheme.typography.bodyMedium,
-            )
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = goalName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = PiPlannerColors.OnSurface,
+                )
+                Text(
+                    text = amountLabel,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = PiPlannerColors.OnSurface,
+                )
+            }
+            if (editable) {
+                OutlinedTextField(
+                    value = percent.toString(),
+                    onValueChange = { raw ->
+                        val digits = raw.filter { it.isDigit() }
+                        onPercentChange(digits.toIntOrNull() ?: 0)
+                    },
+                    label = { Text(stringResource(R.string.share_label)) },
+                    suffix = { Text("%") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PiPlannerColors.NavyPrimary,
+                        cursorColor = PiPlannerColors.NavyPrimary,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.percent_value, percent),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                )
+            }
         }
     }
 }
@@ -348,7 +440,7 @@ private fun ReplacementGoalForm(
     onCancel: (() -> Unit)?,
     gateCopy: Boolean,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
         Text(
             text = if (gateCopy) {
                 stringResource(R.string.delete_goal_only_gate_title)
@@ -357,27 +449,36 @@ private fun ReplacementGoalForm(
             },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
+            color = PiPlannerColors.OnSurface,
         )
         if (gateCopy) {
             Text(
                 text = stringResource(R.string.delete_goal_only_gate_body),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
             )
         }
+        val fieldColors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = PiPlannerColors.NavyPrimary,
+            cursorColor = PiPlannerColors.NavyPrimary,
+        )
         OutlinedTextField(
             value = draft.name,
             onValueChange = { onDraftChange(draft.copy(name = it)) },
             label = { Text(stringResource(R.string.goal_name_label)) },
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
             value = draft.targetRupeesText,
-            onValueChange = { onDraftChange(draft.copy(targetRupeesText = it.filter { ch -> ch.isDigit() })) },
+            onValueChange = {
+                onDraftChange(draft.copy(targetRupeesText = it.filter { ch -> ch.isDigit() }))
+            },
             label = { Text(stringResource(R.string.goal_target_label)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
@@ -386,6 +487,7 @@ private fun ReplacementGoalForm(
             label = { Text(stringResource(R.string.goal_start_label)) },
             supportingText = { Text(stringResource(R.string.goal_date_hint)) },
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
@@ -394,17 +496,78 @@ private fun ReplacementGoalForm(
             label = { Text(stringResource(R.string.goal_end_label)) },
             supportingText = { Text(stringResource(R.string.goal_date_hint)) },
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onSave) {
-                Text(stringResource(R.string.save))
-            }
+        Row(horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+            PrimaryCta(
+                text = stringResource(R.string.save),
+                onClick = onSave,
+                fillMaxWidth = false,
+            )
             if (onCancel != null) {
-                TextButton(onClick = onCancel) {
-                    Text(stringResource(R.string.cancel))
-                }
+                SecondaryCta(
+                    text = stringResource(R.string.cancel),
+                    onClick = onCancel,
+                    style = SecondaryCtaStyle.Text,
+                    fillMaxWidth = false,
+                )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Delete goal · release + destinations")
+@Composable
+private fun DeleteGoalPreview() {
+    val now = "2026-01-01T00:00:00Z"
+    val deleted = Goal(
+        id = "g1",
+        name = "Vacation",
+        targetAmount = 10_000_000L,
+        startDate = "2026-01-01",
+        endDate = "2026-12-01",
+        savedAmount = 2_000_000L,
+        shareOfNewCredits = 0.4,
+        createdAt = now,
+        updatedAt = now,
+    )
+    val remaining = Goal(
+        id = "g2",
+        name = "Emergency",
+        targetAmount = 20_000_000L,
+        startDate = "2026-01-01",
+        endDate = "2027-01-01",
+        savedAmount = 4_000_000L,
+        shareOfNewCredits = 0.6,
+        createdAt = now,
+        updatedAt = now,
+    )
+    PiPlannerTheme {
+        DeleteGoalContent(
+            uiState = DeleteGoalUiState(
+                phase = DeleteGoalPhase.ReassignDefault,
+                deletedGoal = deleted,
+                destinationGoals = listOf(remaining),
+                formattedReleasedAmount = "₹20,000",
+                displayPercents = mapOf("g2" to 100),
+                statusMessage = "Total 100% — ready to delete",
+                canConfirm = true,
+                resetStandingToEqual = true,
+            ),
+            formattedAmount = { "₹20,000" },
+            onPercentChange = { _, _ -> },
+            onBeginEdit = {},
+            onFinishEdit = {},
+            onConfirmClick = {},
+            onConfirmDelete = {},
+            onDismissConfirm = {},
+            onDismissError = {},
+            onShowCreate = {},
+            onHideCreate = {},
+            onDraftChange = {},
+            onSaveReplacement = {},
+            onBack = {},
+        )
     }
 }
