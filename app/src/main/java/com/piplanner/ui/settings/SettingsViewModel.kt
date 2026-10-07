@@ -134,15 +134,22 @@ class SettingsViewModel @Inject constructor(
 
     private fun apply(state: AppState) {
         val dedicated = dedicatedAccountService.dedicatedAccount(state.accounts)
-        val linked = state.accounts.map { account ->
-            LinkedAccountRow(
-                id = account.id,
-                title = goalsTabService.displayTitle(account),
-                subtitle = linkedAccountSubtitle(account),
-                isDedicated = account.isDedicated,
-                formattedBalance = formattingService.formatInrFromPaisa(account.balance),
-            )
-        }
+        // Dedicated first — design / iOS Settings visual grouping.
+        val linked = state.accounts
+            .sortedByDescending { it.isDedicated }
+            .map { account ->
+                val role = roleLabel(account)
+                val link = linkSubtitle(account)
+                LinkedAccountRow(
+                    id = account.id,
+                    title = goalsTabService.displayTitle(account),
+                    roleLabel = role,
+                    linkSubtitle = link,
+                    subtitle = linkedAccountSubtitle(account, role, link),
+                    isDedicated = account.isDedicated,
+                    formattedBalance = formattingService.formatInrFromPaisa(account.balance),
+                )
+            }
         _uiState.update {
             it.copy(
                 accounts = state.accounts,
@@ -159,14 +166,30 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun linkedAccountSubtitle(account: Account): String {
+    private fun roleLabel(account: Account): String {
+        return when {
+            account.isDedicated -> "Dedicated savings"
+            else -> "Spending"
+        }
+    }
+
+    private fun linkSubtitle(account: Account): String {
+        return if (account.isPaytmLinked) "Linked in Paytm" else "Not linked in Paytm"
+    }
+
+    /** Combined subtitle kept for existing tests / a11y fallbacks. */
+    private fun linkedAccountSubtitle(
+        account: Account,
+        role: String,
+        link: String,
+    ): String {
         return buildString {
-            when {
-                account.isDedicated -> append("Dedicated savings")
-                DemoData.isSpendingAccount(account) -> append("Spending · not tracked in PiPlanner")
-                else -> append("Spending")
+            append(role)
+            if (DemoData.isSpendingAccount(account)) {
+                append(" · not tracked in PiPlanner")
             }
-            if (account.isPaytmLinked) append(" · Paytm linked")
+            append(" · ")
+            append(link)
         }
     }
 }
@@ -174,6 +197,8 @@ class SettingsViewModel @Inject constructor(
 data class LinkedAccountRow(
     val id: String,
     val title: String,
+    val roleLabel: String,
+    val linkSubtitle: String,
     val subtitle: String,
     val isDedicated: Boolean,
     val formattedBalance: String,
