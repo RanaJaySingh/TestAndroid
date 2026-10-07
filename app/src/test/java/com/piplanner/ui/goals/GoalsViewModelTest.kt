@@ -185,12 +185,60 @@ class GoalsViewModelTest {
         assertThat(state.withdrawalPreviousBalancePaisa).isEqualTo(10_000_000L)
         assertThat(state.withdrawalNewBalancePaisa).isEqualTo(8_500_000L)
         assertThat(state.createdCreditEntryId).isNull()
+        // PIP-84 frame 10b visual wiring — Went down by −₹… row.
+        assertThat(state.formattedWentDownBy).isEqualTo("-₹15,000")
+        assertThat(state.formattedNewCreditAmount).isNull()
 
         viewModel.continueToWithdrawal()
         advanceUntilIdle()
         val after = viewModel.uiState.value
         assertThat(after.navigateToWithdrawalPreviousPaisa).isEqualTo(10_000_000L)
         assertThat(after.navigateToWithdrawalNewPaisa).isEqualTo(8_500_000L)
+    }
+
+    @Test
+    fun performUpdateBalanceSyncHigherOpensCreditContinue() = runTest(dispatcher) {
+        persistence.saveState(makePostSetupState(consent = false))
+        viewModel = createViewModel(
+            sync = MockBalanceSyncService(
+                knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+                fetchedBalancePaisa = MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA,
+            ),
+        )
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.tapBalanceAction()
+        assertThat(viewModel.uiState.value.showUpdateBalanceSheet).isTrue()
+        viewModel.performUpdateBalanceSync()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.canContinueToCreditEntry).isTrue()
+        assertThat(state.createdCreditEntryId).isNotNull()
+        assertThat(state.updateErrorMessage).isNull()
+    }
+
+    @Test
+    fun performSyncHigherExposesFormattedNewCreditAmount() = runTest(dispatcher) {
+        persistence.saveState(makePostSetupState(consent = true))
+        viewModel = createViewModel(
+            sync = MockBalanceSyncService(
+                knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+                fetchedBalancePaisa = MockBalanceSyncService.DEMO_HIGHER_BALANCE_PAISA,
+            ),
+        )
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.tapBalanceAction()
+        viewModel.performSync()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.formattedNewCreditAmount).isEqualTo("₹10,000")
+        assertThat(state.formattedWentDownBy).isNull()
+        assertThat(state.formattedFetchedBalance).isEqualTo("₹1,10,000")
     }
 
     @Test
