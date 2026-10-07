@@ -11,30 +11,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.domain.TransferAskPrefill
+import com.piplanner.ui.components.LightBlueChip
+import com.piplanner.ui.components.PiCard
+import com.piplanner.ui.components.PrimaryCta
+import com.piplanner.ui.components.ProposalCard
+import com.piplanner.ui.components.SecondaryCta
+import com.piplanner.ui.components.SecondaryCtaStyle
 import com.piplanner.ui.setup.GoalFormScreen
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTypography
 
 /**
- * Ask tab — frames 19 / 19a / 19b / 19c / 19d (PRD R18 / R19).
+ * Ask tab — frames 19 / 19a / 19b / 19c / 19d (PRD R17).
+ * Visual parity (PIP-96): tokens + LightBlueChip / PiCard / ProposalCard / PrimaryCta —
+ * no Grok stub or confirm-routing changes.
  */
 @Composable
 fun AskTab(
@@ -100,54 +106,46 @@ private fun AskTabContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(PiPlannerDimens.Space16)
             .semantics { contentDescription = "Ask tab" },
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space16),
     ) {
-        Text(
-            text = stringResource(R.string.ask_tab_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = stringResource(R.string.ask_tab_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        if (uiState.phase != AskPhase.Unavailable) {
-            ChipRow(
-                chips = uiState.suggestionChips,
-                onChip = onChip,
-                contentDescriptionPrefix = "Ask chip",
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+            Text(
+                text = stringResource(R.string.ask_tab_title),
+                style = PiPlannerTypography.title,
+                fontWeight = FontWeight.Bold,
+                color = PiPlannerColors.OnBackground,
+            )
+            Text(
+                text = stringResource(R.string.ask_tab_subtitle),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnBackground.copy(alpha = 0.72f),
             )
         }
 
-        OutlinedTextField(
-            value = uiState.draftInput,
-            onValueChange = onDraftChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Ask input" },
-            placeholder = { Text(stringResource(R.string.ask_input_placeholder)) },
-            singleLine = false,
-            minLines = 2,
-        )
-
-        Button(
-            onClick = onSubmit,
-            enabled = uiState.draftInput.isNotBlank() && uiState.phase != AskPhase.Unavailable,
-            modifier = Modifier.semantics { contentDescription = "Ask submit" },
-        ) {
-            Text(stringResource(R.string.ask_send))
+        if (uiState.phase != AskPhase.Unavailable) {
+            SuggestionChipRow(
+                chips = uiState.suggestionChips,
+                draftInput = uiState.draftInput,
+                onChip = onChip,
+            )
         }
+
+        AskGrokComposer(
+            draft = uiState.draftInput,
+            enabled = uiState.phase != AskPhase.Unavailable,
+            onDraftChange = onDraftChange,
+            onSubmit = onSubmit,
+        )
 
         uiState.statusMessage?.let { message ->
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnBackground.copy(alpha = 0.72f),
                 modifier = Modifier.semantics { contentDescription = "Ask status $message" },
             )
         }
@@ -159,8 +157,7 @@ private fun AskTabContent(
                 }
             }
             AskPhase.Proposal -> {
-                ProposalCard(
-                    title = uiState.proposalTitle,
+                AskProposalCard(
                     body = uiState.proposalBody,
                     checkedByLabel = uiState.checkedByLabel,
                     onEdit = onEdit,
@@ -184,49 +181,106 @@ private fun AskTabContent(
 }
 
 @Composable
-private fun ChipRow(
+private fun SuggestionChipRow(
     chips: List<String>,
+    draftInput: String,
     onChip: (String) -> Unit,
-    contentDescriptionPrefix: String,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
     ) {
         chips.forEach { chip ->
-            OutlinedButton(
+            LightBlueChip(
+                label = chip,
+                selected = draftInput == chip,
                 onClick = { onChip(chip) },
-                modifier = Modifier.semantics {
-                    contentDescription = "$contentDescriptionPrefix $chip"
-                },
-            ) {
-                Text(chip)
-            }
+                contentDescription = "Ask chip $chip",
+            )
         }
     }
 }
 
 @Composable
-private fun PlainAnswerCard(answer: String) {
+private fun AskGrokComposer(
+    draft: String,
+    enabled: Boolean,
+    onDraftChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp)
-            .semantics { contentDescription = "Ask plain answer" },
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12),
+    ) {
+        OutlinedTextField(
+            value = draft,
+            onValueChange = onDraftChange,
+            enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = "Ask input" },
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.ask_input_placeholder),
+                    style = PiPlannerTypography.body,
+                )
+            },
+            singleLine = false,
+            minLines = 2,
+            shape = RoundedCornerShape(PiPlannerDimens.RadiusChip),
+            colors = askFieldColors(),
+            textStyle = PiPlannerTypography.body,
+        )
+        PrimaryCta(
+            text = stringResource(R.string.ask_send),
+            onClick = onSubmit,
+            enabled = enabled && draft.isNotBlank(),
+            contentDescription = "Ask submit",
+        )
+    }
+}
+
+@Composable
+private fun PlainAnswerCard(answer: String) {
+    PiCard(contentDescription = "Ask plain answer") {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+            Text(
+                text = stringResource(R.string.ask_answer_title),
+                style = PiPlannerTypography.title,
+                fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
+            )
+            Text(
+                text = answer,
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface,
+            )
+        }
+    }
+}
+
+/** Shared ProposalCard shell — “Grok's proposal” / body / checked-by / Edit·Confirm (PRD R17). */
+@Composable
+private fun AskProposalCard(
+    body: String,
+    checkedByLabel: String,
+    onEdit: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    ProposalCard(
+        title = stringResource(R.string.grok_proposal_title),
+        onEdit = onEdit,
+        onConfirm = onConfirm,
+        checkedByLabel = checkedByLabel,
+        contentDescription = "Ask proposal card",
     ) {
         Text(
-            text = stringResource(R.string.ask_answer_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = answer,
-            style = MaterialTheme.typography.bodyMedium,
+            text = body,
+            style = PiPlannerTypography.body,
+            color = PiPlannerColors.OnSurface,
+            modifier = Modifier.semantics { contentDescription = "Proposal summary $body" },
         )
     }
 }
@@ -238,52 +292,57 @@ private fun UnavailableFallback(
     onUseForm: () -> Unit,
     onOpenStandingSplit: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp)
-            .semantics { contentDescription = "Ask unavailable fallback" },
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.grok_unavailable_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(R.string.ask_unavailable_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = stringResource(R.string.ask_templates_label),
-            style = MaterialTheme.typography.labelLarge,
-        )
-        templates.forEach { template ->
-            TextButton(
-                onClick = { onTemplate(template) },
-                modifier = Modifier.semantics {
-                    contentDescription = "Ask template $template"
-                },
-            ) {
-                Text(template)
+    PiCard(contentDescription = "Ask unavailable fallback") {
+        Column(verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space12)) {
+            Text(
+                text = stringResource(R.string.grok_unavailable_title),
+                style = PiPlannerTypography.title,
+                fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
+            )
+            Text(
+                text = stringResource(R.string.ask_unavailable_body),
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+            )
+            Text(
+                text = stringResource(R.string.ask_templates_label),
+                style = PiPlannerTypography.caption.copy(fontWeight = FontWeight.Medium),
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+            )
+            templates.forEach { template ->
+                LightBlueChip(
+                    label = template,
+                    selected = false,
+                    onClick = { onTemplate(template) },
+                    contentDescription = "Ask template $template",
+                )
             }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
+            PrimaryCta(
+                text = stringResource(R.string.use_a_form),
                 onClick = onUseForm,
-                modifier = Modifier.semantics { contentDescription = "Use a form" },
-            ) {
-                Text(stringResource(R.string.use_a_form))
-            }
-            OutlinedButton(
+                contentDescription = "Use a form",
+            )
+            SecondaryCta(
+                text = stringResource(R.string.standing_split_title),
                 onClick = onOpenStandingSplit,
-                modifier = Modifier.semantics { contentDescription = "Open standing split" },
-            ) {
-                Text(stringResource(R.string.standing_split_title))
-            }
+                style = SecondaryCtaStyle.Outline,
+                contentDescription = "Open standing split",
+            )
         }
     }
 }
+
+@Composable
+private fun askFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = PiPlannerColors.NavyPrimary.copy(alpha = 0.35f),
+    unfocusedBorderColor = PiPlannerColors.NavyPrimary.copy(alpha = 0.18f),
+    disabledBorderColor = PiPlannerColors.OutlineMuted,
+    focusedContainerColor = PiPlannerColors.SurfaceCard,
+    unfocusedContainerColor = PiPlannerColors.SurfaceCard,
+    disabledContainerColor = PiPlannerColors.SurfaceCard.copy(alpha = 0.70f),
+    cursorColor = PiPlannerColors.NavyPrimary,
+    focusedTextColor = PiPlannerColors.OnSurface,
+    unfocusedTextColor = PiPlannerColors.OnSurface,
+    disabledTextColor = PiPlannerColors.OnSurface.copy(alpha = 0.50f),
+)
