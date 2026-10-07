@@ -14,10 +14,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 /**
  * Goal detail (frame 14) — metrics, From History, held-edit banner (13g).
+ * Visual wiring only for formatted target / month-year dates (PIP-88); behaviour unchanged.
  */
 @HiltViewModel
 class GoalDetailViewModel @Inject constructor(
@@ -44,10 +48,13 @@ class GoalDetailViewModel @Inject constructor(
                     goal = goal,
                     formattedSaved = formattingService.formatInrFromPaisa(goal.savedAmount),
                     statusLabel = statusLabel(status),
+                    formattedTarget = formattingService.formatInrFromPaisa(goal.targetAmount),
                     formattedAdjustedTarget = formattingService.formatInrFromPaisa(goal.adjustedTarget()),
                     formattedMonthlyNeed = formattingService.formatInrFromPaisa(goal.monthlyNeed()),
                     inflationPercentLabel = "${(goal.inflationRate * 100.0).toInt()}%",
                     sharePercentLabel = "${(goal.shareOfNewCredits * 100.0).toInt()}%",
+                    startDateLabel = formatMonthYear(goal.startDate),
+                    endDateLabel = formatMonthYear(goal.endDate),
                     relatedHistory = heldChangeService.relatedHistoryEntries(state.history, goalId),
                     showHeldEditInfo = heldChangeService.hasHeldChange(state, goalId),
                     heldEditInfoMessage = heldChangeService.heldInfoMessage(),
@@ -78,8 +85,16 @@ class GoalDetailViewModel @Inject constructor(
         }
     }
 
+    private fun formatMonthYear(isoDate: String): String {
+        return runCatching {
+            LocalDate.parse(isoDate).format(MONTH_YEAR)
+        }.getOrDefault(isoDate)
+    }
+
     companion object {
         const val NAV_ARG_GOAL_ID: String = "goalId"
+        private val MONTH_YEAR: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH)
     }
 }
 
@@ -89,10 +104,13 @@ data class GoalDetailUiState(
     val goal: Goal? = null,
     val formattedSaved: String = "₹0",
     val statusLabel: String = "",
+    val formattedTarget: String = "₹0",
     val formattedAdjustedTarget: String = "₹0",
     val formattedMonthlyNeed: String = "₹0",
     val inflationPercentLabel: String = "7%",
     val sharePercentLabel: String = "0%",
+    val startDateLabel: String = "",
+    val endDateLabel: String = "",
     val relatedHistory: List<HistoryEntry> = emptyList(),
     val showHeldEditInfo: Boolean = false,
     val heldEditInfoMessage: String = GoalHeldChangeService.HELD_INFO_MESSAGE,
