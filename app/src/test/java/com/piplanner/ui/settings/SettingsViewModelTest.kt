@@ -112,14 +112,35 @@ class SettingsViewModelTest {
 
     @Test
     fun consentPersistedTrue_afterSettingsConsentYesPath() = runTest(dispatcher) {
-        persistence.saveState(makePostSetupState(consent = false))
+        // Custom post-setup balance — Settings Yes must not replace with mock ₹1,00,000.
+        val customBalance = 12_345_678L
+        persistence.saveState(
+            makePostSetupState(consent = false).let { state ->
+                state.copy(
+                    accounts = state.accounts.map { account ->
+                        if (account.isDedicated) account.copy(balance = customBalance) else account
+                    },
+                )
+            },
+        )
         val repository = PiPlannerRepository(persistence, dispatcher)
-        // Simulate ConsentViewModel Yes from SETTINGS_CONSENT (20b).
-        val state = repository.loadState()
-        val updated = state.accounts.map { account ->
-            if (account.isDedicated) account.copy(consentAutoUpdate = true) else account
-        }
-        repository.saveState(state.copy(accounts = updated))
+        val consentViewModel = com.piplanner.ui.setup.ConsentViewModel(
+            repository = repository,
+            balanceSync = MockBalanceSyncService(
+                knownAccountIds = setOf(DemoData.DEMO_SAVINGS_ACCOUNT_ID),
+            ),
+            dedicatedAccountService = DedicatedAccountService(),
+            formattingService = FormattingService(),
+        )
+        consentViewModel.loadAccounts(fetchesBalanceOnYes = false)
+        advanceUntilIdle()
+        consentViewModel.chooseConsentYes()
+        advanceUntilIdle()
+
+        val dedicated = persistence.loadState().accounts.single { it.isDedicated }
+        assertThat(dedicated.consentAutoUpdate).isTrue()
+        assertThat(dedicated.balance).isEqualTo(customBalance)
+        assertThat(dedicated.balance).isNotEqualTo(MockBalanceSyncService.DEMO_BALANCE_PAISA)
 
         viewModel = createViewModel()
         viewModel.load()

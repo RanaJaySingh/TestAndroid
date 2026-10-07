@@ -445,7 +445,8 @@ fun PiPlannerNavHost(
         composable(PiPlannerRoutes.SETTINGS_CONSENT) {
             val viewModel: ConsentViewModel = hiltViewModel()
             LaunchedEffect(Unit) {
-                viewModel.loadAccounts()
+                // PIP-61 parity: Settings Yes persists consent On only — no mock balance overwrite.
+                viewModel.loadAccounts(fetchesBalanceOnYes = false)
             }
             // Frame 20b — re-consent from Settings; Yes/No return without setup handoff.
             ConsentSheet(
