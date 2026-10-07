@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -104,7 +104,7 @@ fun UpdateBalanceChoiceRow(
             )
         }
         Icon(
-            imageVector = Icons.Filled.KeyboardArrowRight,
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
             tint = PiPlannerColors.OutlineMuted,
             modifier = Modifier.size(20.dp),
@@ -260,7 +260,8 @@ fun UPIMockPad(
 /** Convenience leading icons for Update balance choice rows (Material core). */
 object UpdateBalanceChoiceIcons {
     val Manually: ImageVector get() = Icons.Filled.Edit
-    val BalanceSync: ImageVector get() = Icons.Filled.Sync
+    /** Sync metaphor via Material core Refresh (Sync lives in icons-extended). */
+    val BalanceSync: ImageVector get() = Icons.Filled.Refresh
 }
 
 @Preview(showBackground = true, name = "Choice rows")
