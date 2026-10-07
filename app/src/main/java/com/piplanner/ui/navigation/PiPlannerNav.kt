@@ -18,6 +18,8 @@ import androidx.navigation.navArgument
 import com.piplanner.R
 import com.piplanner.data.model.Goal
 import com.piplanner.ui.AppViewModel
+import com.piplanner.ui.goals.CreditEntryScreen
+import com.piplanner.ui.goals.CreditEntryViewModel
 import com.piplanner.ui.goals.GoalActionStubScreen
 import com.piplanner.ui.goals.GoalDetailScreen
 import com.piplanner.ui.goals.GoalDetailViewModel
@@ -57,12 +59,15 @@ object PiPlannerRoutes {
     const val GOALS_TAB: String = "goals_tab"
     const val GOAL_DETAIL: String = "goal_detail/{goalId}"
     const val GOAL_EDIT: String = "goal_edit/{goalId}"
+    const val CREDIT_ENTRY: String = "credit_entry/{entryId}"
+    const val WITHDRAWAL_STUB: String = "withdrawal_stub"
     const val TRANSFER: String = "transfer/{goalId}"
     const val DELETE_GOAL: String = "delete_goal/{goalId}"
     const val SETTINGS: String = "settings"
 
     fun goalDetail(goalId: String): String = "goal_detail/$goalId"
     fun goalEdit(goalId: String): String = "goal_edit/$goalId"
+    fun creditEntry(entryId: String): String = "credit_entry/$entryId"
     fun transfer(goalId: String): String = "transfer/$goalId"
     fun deleteGoal(goalId: String): String = "delete_goal/$goalId"
 }
@@ -258,6 +263,32 @@ fun PiPlannerNavHost(
                 onOpenSettings = {
                     navController.navigate(PiPlannerRoutes.SETTINGS)
                 },
+                onOpenCreditEntry = { entryId ->
+                    navController.navigate(PiPlannerRoutes.creditEntry(entryId))
+                },
+                onOpenWithdrawalStub = {
+                    navController.navigate(PiPlannerRoutes.WITHDRAWAL_STUB)
+                },
+            )
+        }
+        composable(
+            route = PiPlannerRoutes.CREDIT_ENTRY,
+            arguments = listOf(
+                navArgument(CreditEntryViewModel.NAV_ARG_ENTRY_ID) { type = NavType.StringType },
+            ),
+        ) {
+            val viewModel: CreditEntryViewModel = hiltViewModel()
+            CreditEntryScreen(
+                viewModel = viewModel,
+                onDone = { navController.popBackStack() },
+            )
+        }
+        composable(PiPlannerRoutes.WITHDRAWAL_STUB) {
+            GoalActionStubScreen(
+                title = stringResource(R.string.withdrawal_stub_title),
+                body = stringResource(R.string.withdrawal_stub_body),
+                contentDescription = "Withdrawal stub",
+                onBack = { navController.popBackStack() },
             )
         }
         composable(

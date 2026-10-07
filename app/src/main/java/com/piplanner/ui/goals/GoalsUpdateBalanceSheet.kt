@@ -29,22 +29,28 @@ import com.piplanner.R
 import com.piplanner.domain.FormattingService
 
 /**
- * Goals-tab Update balance stub (Consent Off, frame 11 / 9c).
+ * Goals-tab Update balance sheet (Consent Off, frames 11 / 11a–11c).
  * Distinct from setup [com.piplanner.ui.setup.UpdateBalanceSheet] (frame 4).
- * Full credit-entry flow is PIP-48 — this only hooks a typed balance update.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsUpdateBalanceSheet(
     currentFormatted: String,
+    infoMessage: String?,
+    errorMessage: String?,
+    isBlockedByOpenEntry: Boolean,
+    canContinueToCreditEntry: Boolean,
+    canContinueToWithdrawal: Boolean,
     onApply: (Long) -> Unit,
+    onContinueToCreditEntry: () -> Unit,
+    onContinueToWithdrawal: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var digits by remember { mutableStateOf("") }
     val paisa = (digits.filter { it.isDigit() }.toLongOrNull() ?: 0L) *
         FormattingService.PAISA_PER_RUPEE
-    val canApply = paisa > 0L
+    val canApply = paisa > 0L && !isBlockedByOpenEntry
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -68,29 +74,74 @@ fun GoalsUpdateBalanceSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OutlinedTextField(
-                value = digits,
-                onValueChange = { value -> digits = value.filter { it.isDigit() } },
-                label = { Text(stringResource(R.string.goals_update_new_balance)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "New balance digits" },
-            )
-            Text(
-                text = stringResource(R.string.goals_update_footer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(
-                onClick = { onApply(paisa) },
-                enabled = canApply,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Apply balance" },
-            ) {
-                Text(stringResource(R.string.apply))
+
+            if (!canContinueToCreditEntry && !canContinueToWithdrawal) {
+                OutlinedTextField(
+                    value = digits,
+                    onValueChange = { value -> digits = value.filter { it.isDigit() } },
+                    label = { Text(stringResource(R.string.goals_update_new_balance)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    enabled = !isBlockedByOpenEntry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { contentDescription = "New balance digits" },
+                )
+                Text(
+                    text = stringResource(R.string.goals_update_footer),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            if (infoMessage != null) {
+                Text(
+                    text = infoMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics { contentDescription = "Update balance info" },
+                )
+            }
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            when {
+                canContinueToCreditEntry -> {
+                    Button(
+                        onClick = onContinueToCreditEntry,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Continue to credit entry" },
+                    ) {
+                        Text(stringResource(R.string.continue_label))
+                    }
+                }
+                canContinueToWithdrawal -> {
+                    Button(
+                        onClick = onContinueToWithdrawal,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Continue to withdrawal" },
+                    ) {
+                        Text(stringResource(R.string.goals_sync_withdrawal_cta))
+                    }
+                }
+                else -> {
+                    Button(
+                        onClick = { onApply(paisa) },
+                        enabled = canApply,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Apply balance" },
+                    ) {
+                        Text(stringResource(R.string.apply))
+                    }
+                }
             }
             TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.close))

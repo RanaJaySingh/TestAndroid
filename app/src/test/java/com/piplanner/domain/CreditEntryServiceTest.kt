@@ -226,7 +226,7 @@ class CreditEntryServiceTest {
         ) as CreditProcessOutcome.OpenCreditCreated
 
         val lockedState = service.applyCreditLock(
-            to = created.state,
+            state = created.state,
             entryId = entryId,
             percentages = mapOf(
                 carId to BigDecimal("0.70"),
@@ -253,7 +253,7 @@ class CreditEntryServiceTest {
 
         assertThrows(CreditEntryException::class.java) {
             service.applyCreditLock(
-                to = lockedState,
+                state = lockedState,
                 entryId = entryId,
                 percentages = mapOf(
                     carId to BigDecimal("0.50"),
@@ -277,7 +277,7 @@ class CreditEntryServiceTest {
         ) as CreditProcessOutcome.OpenCreditCreated
 
         val lockedState = service.applyCreditLock(
-            to = created.state,
+            state = created.state,
             entryId = entryId,
             percentages = mapOf(
                 carId to BigDecimal("0.25"),

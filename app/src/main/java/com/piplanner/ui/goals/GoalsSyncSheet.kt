@@ -2,6 +2,7 @@ package com.piplanner.ui.goals
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -24,13 +25,24 @@ import androidx.compose.ui.unit.dp
 import com.piplanner.R
 
 /**
- * Stub Sync sheet for Consent On — hooks BalanceSyncService; full credit entry is PIP-48.
+ * Sync sheet for Consent On — frames 10 / 10a / 10b (PIP-48).
+ * Also available as [SyncSheet] for ticket naming.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsSyncSheet(
-    isSyncing: Boolean,
+    phase: SyncSheetPhase,
+    formattedPrevious: String,
+    formattedFetched: String?,
+    formattedNewAmount: String?,
+    infoMessage: String?,
+    errorMessage: String?,
+    isBlockedByOpenEntry: Boolean,
+    canContinueToCreditEntry: Boolean,
+    canContinueToWithdrawal: Boolean,
     onSync: () -> Unit,
+    onContinueToCreditEntry: () -> Unit,
+    onContinueToWithdrawal: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -58,22 +70,146 @@ fun GoalsSyncSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            if (isSyncing) {
-                CircularProgressIndicator()
-                Text(stringResource(R.string.goals_syncing))
-            } else {
-                Button(
-                    onClick = onSync,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = "Sync now" },
-                ) {
-                    Text(stringResource(R.string.goals_sync_now))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SyncAmountRow(
+                    label = stringResource(R.string.credit_entry_previous),
+                    value = formattedPrevious,
+                )
+                if (formattedFetched != null) {
+                    SyncAmountRow(
+                        label = stringResource(R.string.goals_sync_fetched),
+                        value = formattedFetched,
+                    )
+                }
+                if (formattedNewAmount != null) {
+                    SyncAmountRow(
+                        label = stringResource(R.string.credit_entry_new_amount),
+                        value = formattedNewAmount,
+                    )
+                }
+            }
+
+            if (infoMessage != null) {
+                Text(
+                    text = infoMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { contentDescription = "Sync info" },
+                )
+            }
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            when {
+                phase == SyncSheetPhase.Syncing -> {
+                    CircularProgressIndicator()
+                    Text(stringResource(R.string.goals_syncing))
+                }
+                canContinueToCreditEntry -> {
+                    Button(
+                        onClick = onContinueToCreditEntry,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Continue to credit entry" },
+                    ) {
+                        Text(stringResource(R.string.continue_label))
+                    }
+                }
+                canContinueToWithdrawal -> {
+                    Button(
+                        onClick = onContinueToWithdrawal,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Continue to withdrawal" },
+                    ) {
+                        Text(stringResource(R.string.goals_sync_withdrawal_cta))
+                    }
+                }
+                else -> {
+                    Button(
+                        onClick = onSync,
+                        enabled = !isBlockedByOpenEntry && phase != SyncSheetPhase.Syncing,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Sync now" },
+                    ) {
+                        Text(stringResource(R.string.goals_sync_now))
+                    }
                 }
             }
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.close))
             }
         }
+    }
+}
+
+/** Ticket-facing alias for [GoalsSyncSheet]. */
+@Composable
+fun SyncSheet(
+    phase: SyncSheetPhase,
+    formattedPrevious: String,
+    formattedFetched: String?,
+    formattedNewAmount: String?,
+    infoMessage: String?,
+    errorMessage: String?,
+    isBlockedByOpenEntry: Boolean,
+    canContinueToCreditEntry: Boolean,
+    canContinueToWithdrawal: Boolean,
+    onSync: () -> Unit,
+    onContinueToCreditEntry: () -> Unit,
+    onContinueToWithdrawal: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    GoalsSyncSheet(
+        phase = phase,
+        formattedPrevious = formattedPrevious,
+        formattedFetched = formattedFetched,
+        formattedNewAmount = formattedNewAmount,
+        infoMessage = infoMessage,
+        errorMessage = errorMessage,
+        isBlockedByOpenEntry = isBlockedByOpenEntry,
+        canContinueToCreditEntry = canContinueToCreditEntry,
+        canContinueToWithdrawal = canContinueToWithdrawal,
+        onSync = onSync,
+        onContinueToCreditEntry = onContinueToCreditEntry,
+        onContinueToWithdrawal = onContinueToWithdrawal,
+        onDismiss = onDismiss,
+    )
+}
+
+enum class SyncSheetPhase {
+    Idle,
+    Syncing,
+    ShowingResult,
+}
+
+@Composable
+private fun SyncAmountRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
