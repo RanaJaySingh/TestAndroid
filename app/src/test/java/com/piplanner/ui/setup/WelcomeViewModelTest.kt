@@ -1,6 +1,7 @@
 package com.piplanner.ui.setup
 
 import com.google.common.truth.Truth.assertThat
+import com.piplanner.util.DemoData
 import org.junit.Before
 import org.junit.Test
 
@@ -11,6 +12,14 @@ class WelcomeViewModelTest {
     @Before
     fun setUp() {
         viewModel = WelcomeViewModel()
+    }
+
+    @Test
+    fun greeting_includesPersonaNameRahul() {
+        val state = viewModel.uiState.value
+        assertThat(state.personaName).isEqualTo("Rahul")
+        assertThat(state.greeting).contains(DemoData.PERSONA_NAME)
+        assertThat(state.greeting).matches("Good (morning|afternoon|evening), Rahul")
     }
 
     @Test

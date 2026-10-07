@@ -33,6 +33,16 @@ class BalanceSyncServiceTest {
     }
 
     @Test
+    fun fetchBalance_spendingAccount_notTracked_r25() = runTest {
+        val service = MockBalanceSyncService(knownAccountIds = DemoData.trackedAccountIds())
+        val result = service.fetchBalance(DemoData.DEMO_SPENDING_ACCOUNT_ID)
+
+        assertThat(result.isFailure).isTrue()
+        val error = result.exceptionOrNull() as SyncException
+        assertThat(error.error).isEqualTo(SyncError.AccountNotFound)
+    }
+
+    @Test
     fun fetchBalance_emptyKnownSet_alwaysSucceeds() = runTest {
         val service = MockBalanceSyncService()
         val result = service.fetchBalance(unknownId)

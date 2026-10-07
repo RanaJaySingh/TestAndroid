@@ -110,17 +110,20 @@ class StubGrokService(
     }
 
     companion object {
-        /** Design / demo happy-path proposal: Car 60%, Emergency Fund 40%. */
+        /**
+         * Design / demo happy-path proposal (PIP-66 / A7): Car 60%, Emergency Fund 40%.
+         * Names and targets match [DemoData] persona seeding.
+         */
         val HAPPY_PATH_PROPOSALS: List<GoalProposal> = listOf(
             GoalProposal(
                 id = DemoData.DEMO_CAR_GOAL_ID,
-                name = "Car",
+                name = DemoData.HAPPY_PATH_CAR_NAME,
                 sharePercentage = 0.6,
                 suggestedTarget = 50_000_000L,
             ),
             GoalProposal(
                 id = DemoData.DEMO_EMERGENCY_GOAL_ID,
-                name = "Emergency Fund",
+                name = DemoData.HAPPY_PATH_EMERGENCY_NAME,
                 sharePercentage = 0.4,
                 suggestedTarget = 20_000_000L,
             ),

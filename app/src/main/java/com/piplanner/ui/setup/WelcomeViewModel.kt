@@ -1,11 +1,13 @@
 package com.piplanner.ui.setup
 
 import androidx.lifecycle.ViewModel
+import com.piplanner.util.DemoData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.time.Clock
 import javax.inject.Inject
 
 /** One "How it works" step on Welcome (design frame 1). */
@@ -18,12 +20,19 @@ data class WelcomeStep(
 /**
  * View model for Welcome (frame 1) — PRD R1.
  * Copy matches iOS PIP-35 / design frame 1.
+ * Persona greeting (PIP-66 / A8) uses [DemoData.PERSONA_NAME].
  */
 @HiltViewModel
 class WelcomeViewModel @Inject constructor() : ViewModel() {
 
+    private val clock: Clock = Clock.systemDefaultZone()
+
     private val _uiState = MutableStateFlow(
-        WelcomeUiState(steps = DEFAULT_STEPS),
+        WelcomeUiState(
+            steps = DEFAULT_STEPS,
+            greeting = DemoData.greeting(clock = clock),
+            personaName = DemoData.PERSONA_NAME,
+        ),
     )
     val uiState: StateFlow<WelcomeUiState> = _uiState.asStateFlow()
 
@@ -58,5 +67,7 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
 
 data class WelcomeUiState(
     val steps: List<WelcomeStep> = emptyList(),
+    val greeting: String = DemoData.greeting(),
+    val personaName: String = DemoData.PERSONA_NAME,
     val shouldNavigateToAccounts: Boolean = false,
 )

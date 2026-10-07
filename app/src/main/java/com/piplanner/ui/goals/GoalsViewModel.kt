@@ -17,12 +17,14 @@ import com.piplanner.domain.DedicatedAccountService
 import com.piplanner.domain.FormattingService
 import com.piplanner.domain.GoalsBalanceAction
 import com.piplanner.domain.GoalsTabService
+import com.piplanner.util.DemoData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
@@ -40,7 +42,11 @@ class GoalsViewModel @Inject constructor(
     private val creditEntryService: CreditEntryService,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GoalsUiState())
+    private val clock: Clock = Clock.systemDefaultZone()
+
+    private val _uiState = MutableStateFlow(
+        GoalsUiState(greeting = DemoData.greeting(clock = clock)),
+    )
     val uiState: StateFlow<GoalsUiState> = _uiState.asStateFlow()
 
     init {
@@ -469,6 +475,8 @@ class GoalsViewModel @Inject constructor(
                 accounts = state.accounts,
                 goals = state.goals,
                 history = state.history,
+                greeting = DemoData.greeting(clock = clock),
+                personaName = DemoData.PERSONA_NAME,
                 formattedTotalSavings = formattingService.formatInrFromPaisa(total),
                 totalSavingsPaisa = total,
                 balanceAction = action,
@@ -493,6 +501,8 @@ data class GoalsUiState(
     val accounts: List<Account> = emptyList(),
     val goals: List<Goal> = emptyList(),
     val history: List<HistoryEntry> = emptyList(),
+    val greeting: String = DemoData.greeting(),
+    val personaName: String = DemoData.PERSONA_NAME,
     val formattedTotalSavings: String = "₹0",
     val totalSavingsPaisa: Long = 0L,
     val balanceAction: GoalsBalanceAction = GoalsBalanceAction.UpdateBalance,
