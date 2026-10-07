@@ -38,7 +38,7 @@ Delete goal with money reassignment and standing-split renormalization (PRD R13,
 
 ## Base / rebase
 
-Rebased onto `main@f2e95c2` (PIP-48 Sync / credit entry). Entry remains Goal detail Delete.
+Rebased onto `main@cc12d7f` (PIP-52 Standing split screen; prior base was `main@f2e95c2` / PIP-48). Entry remains Goal detail Delete. Keep-both with PIP-52 Standing split + Credit entry wiring.
 
 ## GTS Review round 1 fixes
 
@@ -51,7 +51,7 @@ Rebased onto `main@f2e95c2` (PIP-48 Sync / credit entry). Entry remains Goal det
 
 ## Test result
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-2 Done@100% gate; rebased onto `main@f2e95c2`).
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-2 Done@100% gate; rebased onto `main@cc12d7f`).
 
 ## Assumptions
 
