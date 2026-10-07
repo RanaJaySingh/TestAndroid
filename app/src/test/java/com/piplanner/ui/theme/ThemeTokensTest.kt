@@ -26,7 +26,7 @@ class ThemeTokensTest {
 
     @Test
     fun chipPositiveBehindTokens_exist() {
-        assertThat(PiPlannerColors.ChipLightBlue).isNotEqualTo(Color.Unspecified)
+        assertThat(PiPlannerColors.ChipLightBlue).isEqualTo(Color(0xFFD6E8FF))
         assertThat(PiPlannerColors.PositiveGreen).isNotEqualTo(Color.Unspecified)
         assertThat(PiPlannerColors.Behind).isNotEqualTo(Color.Unspecified)
         assertThat(PiPlannerColors.Destructive).isNotEqualTo(Color.Unspecified)

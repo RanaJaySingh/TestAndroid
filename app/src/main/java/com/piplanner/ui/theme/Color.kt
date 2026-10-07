@@ -13,8 +13,8 @@ object PiPlannerColors {
     /** color.navy.deep — gradient/end accent within approved range */
     val NavyDeep: Color = Color(0xFF003A8C)
 
-    /** color.chip.lightBlue — soft blue fill for Ask / Transfer chips */
-    val ChipLightBlue: Color = Color(0xFFD6EBFF)
+    /** color.chip.lightBlue — soft blue fill for Ask / Transfer chips (iOS PIP-67 contract) */
+    val ChipLightBlue: Color = Color(0xFFD6E8FF)
 
     /** Readable label on light-blue chips */
     val OnChipLightBlue: Color = Color(0xFF0A2A6B)
