@@ -198,6 +198,12 @@
     <string name="history_original_amounts">Original amounts never change</string>
     <string name="ask_tab_title">Ask</string>
     <string name="ask_tab_placeholder_body">Ask tab arrives in a later ticket.</string>
+    <string name="ask_tab_subtitle">Ask about your plan, or tell Grok what to do. Changes come back as a card to confirm.</string>
+    <string name="ask_input_placeholder">Ask Grok</string>
+    <string name="ask_send">Ask</string>
+    <string name="ask_answer_title">Answer</string>
+    <string name="ask_unavailable_body">You can keep going with a hand form, standing-split sliders, or a template sentence. Ledger rules still apply.</string>
+    <string name="ask_templates_label">Template sentences</string>
 
     <string name="goal_chat_title">Goals</string>
     <string name="goal_chat_placeholder">Describe your goals…</string>

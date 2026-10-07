@@ -36,6 +36,7 @@ class StandingSplitViewModelTest {
         viewModel = StandingSplitViewModel(
             repository = repository,
             standingSplitService = StandingSplitService(OpeningSplitService()),
+            askStandingSplitSeed = com.piplanner.domain.AskStandingSplitSeed(),
         )
     }
 

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.piplanner.data.model.Goal
 import com.piplanner.data.repository.PiPlannerRepository
+import com.piplanner.domain.AskStandingSplitSeed
 import com.piplanner.domain.StandingSplitException
 import com.piplanner.domain.StandingSplitService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 /**
  * View model for Standing split (frame 15) — PRD R12, R22, R24; Spec BR-2.
@@ -24,6 +26,7 @@ import javax.inject.Inject
 class StandingSplitViewModel @Inject constructor(
     private val repository: PiPlannerRepository,
     private val standingSplitService: StandingSplitService,
+    private val askStandingSplitSeed: AskStandingSplitSeed,
 ) : ViewModel() {
 
     private val clock: () -> Instant = { Instant.now() }
@@ -38,12 +41,20 @@ class StandingSplitViewModel @Inject constructor(
     fun load() {
         viewModelScope.launch {
             val state = repository.loadState()
-            configure(
-                goals = state.goals,
-                standingDisplaySeed = standingSplitService.defaultDisplayPercents(
+            val askSeed = askStandingSplitSeed.take()
+            val displaySeed = if (askSeed != null) {
+                askSeed.associate { split ->
+                    split.goalId to (split.percentage * 100.0).roundToInt()
+                }
+            } else {
+                standingSplitService.defaultDisplayPercents(
                     goals = state.goals,
                     standingSplits = state.standingSplits,
-                ),
+                )
+            }
+            configure(
+                goals = state.goals,
+                standingDisplaySeed = displaySeed,
             )
         }
     }

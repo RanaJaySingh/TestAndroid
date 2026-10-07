@@ -1,6 +1,7 @@
 package com.piplanner.domain
 
 import com.google.common.truth.Truth.assertThat
+import com.piplanner.util.DemoData
 import org.junit.Test
 import java.math.BigDecimal
 
@@ -80,6 +81,63 @@ class GrokServiceTest {
         assertThat(result.isSuccess).isTrue()
         val answer = result.getOrNull() as AskResponse.PlainAnswer
         assertThat(answer.text).isNotEmpty()
+    }
+
+    @Test
+    fun askQuestion_chipsStayPlainAnswers() {
+        val service = StubGrokService()
+        StubGrokService.ASK_CHIPS.forEach { chip ->
+            val result = service.askQuestion(chip)
+            assertThat(result.isSuccess).isTrue()
+            assertThat(result.getOrNull()).isInstanceOf(AskResponse.PlainAnswer::class.java)
+        }
+    }
+
+    @Test
+    fun askQuestion_transferProposalWhenQueryMentionsTransfer() {
+        val service = StubGrokService()
+        val result = service.askQuestion("Please transfer ₹5,000")
+
+        assertThat(result.isSuccess).isTrue()
+        val proposal = result.getOrNull() as AskResponse.ActionProposal
+        val prefill = StubGrokService.transferPrefill(proposal.action)
+        assertThat(prefill).isNotNull()
+        assertThat(prefill!!.fromGoalId).isEqualTo(DemoData.DEMO_CAR_GOAL_ID)
+        assertThat(prefill.toGoalId).isEqualTo(DemoData.DEMO_EMERGENCY_GOAL_ID)
+        assertThat(prefill.amountPaisa).isEqualTo(500_000L)
+    }
+
+    @Test
+    fun askQuestion_addGoalProposalForVacation() {
+        val service = StubGrokService()
+        val result = service.askQuestion("Add a ₹50,000 vacation by March")
+
+        assertThat(result.isSuccess).isTrue()
+        val proposal = result.getOrNull() as AskResponse.ActionProposal
+        val action = proposal.action as ProposedAction.AddGoal
+        assertThat(action.proposal.name).isEqualTo("Vacation")
+        assertThat(action.proposal.suggestedTarget).isEqualTo(5_000_000L)
+    }
+
+    @Test
+    fun askQuestion_changeSplitProposal() {
+        val service = StubGrokService()
+        val result = service.askQuestion("Change my standing split to 50/50")
+
+        assertThat(result.isSuccess).isTrue()
+        val proposal = result.getOrNull() as AskResponse.ActionProposal
+        assertThat(proposal.action).isInstanceOf(ProposedAction.ChangeSplit::class.java)
+    }
+
+    @Test
+    fun askQuestion_invalidDraftNeverReturnsProposal() {
+        val service = StubGrokService()
+        val result = service.askQuestion("invalid draft please")
+
+        assertThat(result.isFailure).isTrue()
+        assertThat((result.exceptionOrNull() as GrokException).error)
+            .isEqualTo(GrokError.InvalidDraft)
+        assertThat(result.getOrNull()).isNull()
     }
 
     @Test
