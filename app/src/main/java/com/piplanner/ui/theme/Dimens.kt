@@ -12,6 +12,12 @@ object PiPlannerDimens {
     val RadiusChip: Dp = 12.dp
     val RadiusSheetTop: Dp = 22.dp
 
+    /**
+     * Selected [com.piplanner.ui.components.LightBlueChip] navy stroke (iOS PIP-69 contract).
+     * Range ~1–1.5dp; unselected chips are fill-only (no stroke).
+     */
+    val ChipSelectedStroke: Dp = 1.5.dp
+
     /** Soft Paytm-like card elevation (not heavy multi-layer shadows). */
     val ElevationCard: Dp = 2.dp
 

@@ -20,12 +20,21 @@
 
 - `ui/components/PiCard` — white `SurfaceCard`, `RadiusCard` 22dp, soft `ElevationCard` 2dp
 - `ui/components/PrimaryCta` / `SecondaryCta` — navy filled primary; outline + text secondary
-- `ui/components/LightBlueChip` — `ChipLightBlue` fill; selected navy / unselected light-blue
+- `ui/components/LightBlueChip` — iOS PIP-69 contract (Reviewer r1):
+  - **selected:** `ChipLightBlue` fill + navy stroke (`ChipSelectedStroke` 1.5dp) + navy semibold label
+  - **unselected:** fill-only `ChipLightBlue` (no navy stroke)
+  - Must **not** invert to navy-fill / white-label
 - `ui/components/PiSheet` + `PiSheetChrome` — ModalBottomSheet wrapper + in-content Paytm-like chrome (handle, top radius, title spacing)
 - `ui/components/ProposalCard` — shell with body slot, Edit/Confirm, checked-by caption (default `StubGrokService.CHECKED_BY_LABEL`)
 - `SharedVisualComponentsPreview` — Compose preview gallery (demo only)
-- Unit smoke: `SharedVisualComponentsTest`
-- Dimens: `ElevationCard`, `SheetHandleWidth` / `SheetHandleHeight`
+- Unit smoke: `SharedVisualComponentsTest` (includes selected-chip contract)
+- Dimens: `ElevationCard`, `ChipSelectedStroke`, `SheetHandleWidth` / `SheetHandleHeight`
+
+## Reviewer must-fix
+
+| # | Finding | Fix |
+| :- | :---- | :---- |
+| r1 | Selected LightBlueChip used navy fill + white label | Match iOS PIP-69: soft-blue fill + navy stroke + navy label; unselected fill-only |
 
 ## Out of scope
 

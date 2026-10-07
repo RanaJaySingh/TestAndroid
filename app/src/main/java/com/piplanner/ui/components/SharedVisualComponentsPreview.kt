@@ -56,11 +56,12 @@ fun SharedVisualComponentsGallery(modifier: Modifier = Modifier) {
         SecondaryCta(text = "Use a form", onClick = {}, style = SecondaryCtaStyle.Text)
 
         Text(
-            text = "LightBlueChip",
+            text = "LightBlueChip (selected = soft blue + navy stroke)",
             style = PiPlannerTypography.title,
             color = PiPlannerColors.OnBackground,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+            // Unselected: fill-only ChipLightBlue. Selected: same fill + navy stroke + navy label.
             LightBlueChip(label = "₹1,000", selected = false, onClick = {})
             LightBlueChip(label = "₹5,000", selected = true, onClick = {})
             LightBlueChip(label = "₹10,000", selected = false, onClick = {})
@@ -123,18 +124,25 @@ private fun PrimaryCtaStatesPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "Chip selected/unselected")
+@Preview(showBackground = true, name = "Chip selected/unselected (PIP-69)")
 @Composable
 private fun LightBlueChipStatesPreview() {
     PiPlannerTheme {
-        Row(
+        Column(
             modifier = Modifier
                 .background(PiPlannerColors.BackgroundApp)
                 .padding(PiPlannerDimens.Space16),
-            horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
+            verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8),
         ) {
-            LightBlueChip(label = "Unselected", selected = false, onClick = {})
-            LightBlueChip(label = "Selected", selected = true, onClick = {})
+            Text(
+                text = "Unselected = fill only · Selected = fill + navy stroke",
+                style = PiPlannerTypography.caption,
+                color = PiPlannerColors.OnBackground,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space8)) {
+                LightBlueChip(label = "Unselected", selected = false, onClick = {})
+                LightBlueChip(label = "Selected", selected = true, onClick = {})
+            }
         }
     }
 }

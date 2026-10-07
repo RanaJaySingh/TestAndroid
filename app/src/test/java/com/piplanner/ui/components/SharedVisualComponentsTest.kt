@@ -39,6 +39,21 @@ class SharedVisualComponentsTest {
         assertThat(PiPlannerDimens.RadiusChip.value).isAtMost(12f)
     }
 
+    /**
+     * iOS PIP-69 / Reviewer r1: selected keeps ChipLightBlue fill + navy stroke + navy label;
+     * unselected is fill-only (no navy stroke). Must not invert to navy-fill/white-label.
+     */
+    @Test
+    fun lightBlueChip_selectedContract_keepsLightBlueFill_navyStrokeAndLabel() {
+        // Selected + unselected share the soft-blue fill (not NavyPrimary invert).
+        assertThat(PiPlannerColors.ChipLightBlue).isNotEqualTo(PiPlannerColors.NavyPrimary)
+        assertThat(PiPlannerColors.OnChipLightBlue).isEqualTo(PiPlannerColors.NavyPrimary)
+        assertThat(PiPlannerColors.OnChipLightBlue).isNotEqualTo(PiPlannerColors.OnNavy)
+        // Selected stroke ~1–1.5dp; unselected uses 0dp (asserted in LightBlueChip source contract).
+        assertThat(PiPlannerDimens.ChipSelectedStroke.value).isAtLeast(1f)
+        assertThat(PiPlannerDimens.ChipSelectedStroke.value).isAtMost(1.5f)
+    }
+
     @Test
     fun piSheetChrome_usesSheetTopRadiusAndHandleTokens() {
         assertThat(PiPlannerDimens.RadiusSheetTop).isEqualTo(22.dp)

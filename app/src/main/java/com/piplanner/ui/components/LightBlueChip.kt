@@ -6,6 +6,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -15,7 +16,10 @@ import com.piplanner.ui.theme.PiPlannerDimens
 
 /**
  * Soft light-blue chip (Ask suggestions / Transfer ₹ amounts).
- * Selected uses navy fill; unselected uses [PiPlannerColors.ChipLightBlue].
+ *
+ * iOS PIP-69 / Reviewer contract:
+ * - selected: [PiPlannerColors.ChipLightBlue] fill + navy stroke (~1–1.5dp) + navy semibold label
+ * - unselected: fill-only [PiPlannerColors.ChipLightBlue] (no navy stroke)
  */
 @Composable
 fun LightBlueChip(
@@ -41,21 +45,23 @@ fun LightBlueChip(
         border = FilterChipDefaults.filterChipBorder(
             enabled = enabled,
             selected = selected,
-            borderColor = PiPlannerColors.OutlineMuted,
+            // Unselected: fill-only — no stroke.
+            borderColor = Color.Transparent,
+            disabledBorderColor = Color.Transparent,
+            borderWidth = 0.dp,
+            // Selected: navy stroke on ChipLightBlue fill.
             selectedBorderColor = PiPlannerColors.NavyPrimary,
-            disabledBorderColor = PiPlannerColors.OutlineMuted.copy(alpha = 0.38f),
             disabledSelectedBorderColor = PiPlannerColors.NavyPrimary.copy(alpha = 0.38f),
-            borderWidth = 1.dp,
-            selectedBorderWidth = 0.dp,
+            selectedBorderWidth = PiPlannerDimens.ChipSelectedStroke,
         ),
         colors = FilterChipDefaults.filterChipColors(
             containerColor = PiPlannerColors.ChipLightBlue,
             labelColor = PiPlannerColors.OnChipLightBlue,
-            selectedContainerColor = PiPlannerColors.NavyPrimary,
-            selectedLabelColor = PiPlannerColors.OnNavy,
+            selectedContainerColor = PiPlannerColors.ChipLightBlue,
+            selectedLabelColor = PiPlannerColors.OnChipLightBlue,
             disabledContainerColor = PiPlannerColors.ChipLightBlue.copy(alpha = 0.50f),
             disabledLabelColor = PiPlannerColors.OnChipLightBlue.copy(alpha = 0.50f),
-            disabledSelectedContainerColor = PiPlannerColors.NavyPrimary.copy(alpha = 0.38f),
+            disabledSelectedContainerColor = PiPlannerColors.ChipLightBlue.copy(alpha = 0.50f),
         ),
     )
 }
