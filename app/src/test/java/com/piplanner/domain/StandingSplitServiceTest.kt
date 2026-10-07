@@ -172,6 +172,63 @@ class StandingSplitServiceTest {
             .isEqualTo("Saved money stays put")
     }
 
+    // MARK: - Equal / renormalize (PIP-54 delete)
+
+    @Test
+    fun equalSplits_twoGoals_sumToOne() {
+        val splits = service.equalSplits(
+            listOf(DemoData.DEMO_CAR_GOAL_ID, DemoData.DEMO_EMERGENCY_GOAL_ID),
+        )
+        assertThat(splits).hasSize(2)
+        assertThat(service.isValidHundred(splits)).isTrue()
+        assertThat(splits[0].percentage).isEqualTo(0.5)
+        assertThat(splits[1].percentage).isEqualTo(0.5)
+    }
+
+    @Test
+    fun equalSplits_threeGoals_largestRemainder() {
+        val splits = service.equalSplits(listOf("a", "b", "c"))
+        assertThat(service.isValidHundred(splits)).isTrue()
+        val percents = splits.map { (it.percentage * 100).toInt() }
+        assertThat(percents.sum()).isEqualTo(100)
+        assertThat(percents).containsExactly(34, 33, 33)
+    }
+
+    @Test
+    fun renormalizeAfterRemoving_proportionalAmongSurvivors() {
+        val splits = listOf(
+            StandingSplit(DemoData.DEMO_CAR_GOAL_ID, 0.60),
+            StandingSplit(DemoData.DEMO_EMERGENCY_GOAL_ID, 0.30),
+            StandingSplit("cccccccc-cccc-cccc-cccc-cccccccccccc", 0.10),
+        )
+        val next = service.renormalizeAfterRemoving(splits, DemoData.DEMO_CAR_GOAL_ID)
+        assertThat(next).hasSize(2)
+        assertThat(service.isValidHundred(next)).isTrue()
+        // 0.30 / 0.40 = 0.75, 0.10 / 0.40 = 0.25
+        val emergency = next.first { it.goalId == DemoData.DEMO_EMERGENCY_GOAL_ID }
+        val other = next.first { it.goalId == "cccccccc-cccc-cccc-cccc-cccccccccccc" }
+        assertThat(emergency.percentage).isWithin(1e-9).of(0.75)
+        assertThat(other.percentage).isWithin(1e-9).of(0.25)
+    }
+
+    @Test
+    fun renormalizeAfterRemoving_singleSurvivorBecomesHundred() {
+        val splits = listOf(
+            StandingSplit(DemoData.DEMO_CAR_GOAL_ID, 0.60),
+            StandingSplit(DemoData.DEMO_EMERGENCY_GOAL_ID, 0.40),
+        )
+        val next = service.renormalizeAfterRemoving(splits, DemoData.DEMO_CAR_GOAL_ID)
+        assertThat(next).hasSize(1)
+        assertThat(next.first().goalId).isEqualTo(DemoData.DEMO_EMERGENCY_GOAL_ID)
+        assertThat(next.first().percentage).isEqualTo(1.0)
+    }
+
+    @Test
+    fun resetToEqual_matchesEqualSplits() {
+        val ids = listOf(DemoData.DEMO_CAR_GOAL_ID, DemoData.DEMO_EMERGENCY_GOAL_ID)
+        assertThat(service.resetToEqual(ids)).isEqualTo(service.equalSplits(ids))
+    }
+
     private fun sampleGoals(): List<Goal> = DemoData.sampleOpeningSplitGoals()
 
     private fun sampleGoalsWithSaved(): List<Goal> {

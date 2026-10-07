@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
 import com.piplanner.data.model.HistoryEntry
 import com.piplanner.data.model.HistoryEntryType
+import com.piplanner.domain.DeleteGoalService
 
 /**
  * Goal detail · design frame 14 (PRD R10).
@@ -243,6 +244,6 @@ private fun historyTypeLabel(type: HistoryEntryType): String {
         HistoryEntryType.NewCredit -> stringResource(R.string.history_type_credit)
         HistoryEntryType.Transfer -> stringResource(R.string.history_type_transfer)
         HistoryEntryType.Withdrawal -> stringResource(R.string.history_type_withdrawal)
-        HistoryEntryType.GoalDeleted -> stringResource(R.string.history_type_deleted)
+        HistoryEntryType.GoalDeleted -> DeleteGoalService.historyTitle
     }
 }

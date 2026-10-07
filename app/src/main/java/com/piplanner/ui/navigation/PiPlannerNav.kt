@@ -20,6 +20,8 @@ import com.piplanner.data.model.Goal
 import com.piplanner.ui.AppViewModel
 import com.piplanner.ui.goals.CreditEntryScreen
 import com.piplanner.ui.goals.CreditEntryViewModel
+import com.piplanner.ui.goals.DeleteGoalScreen
+import com.piplanner.ui.goals.DeleteGoalViewModel
 import com.piplanner.ui.goals.GoalActionStubScreen
 import com.piplanner.ui.goals.GoalDetailScreen
 import com.piplanner.ui.goals.GoalDetailViewModel
@@ -79,7 +81,7 @@ object PiPlannerRoutes {
  * App navigation host.
  * First-run / post–Reset → Welcome (PIP-36); CTA → Accounts (PIP-38);
  * Consent + balance entry (PIP-40) → Goal chat/form (PIP-42) → Opening split (PIP-44);
- * setup complete → Goals tab (PIP-46) with Goal detail/edit (PIP-50).
+ * setup complete → Goals tab (PIP-46) → Goal detail (PIP-50) → Delete (PIP-54).
  */
 @Composable
 fun PiPlannerNavHost(
@@ -359,12 +361,18 @@ fun PiPlannerNavHost(
             arguments = listOf(
                 navArgument(GoalDetailViewModel.NAV_ARG_GOAL_ID) { type = NavType.StringType },
             ),
-        ) {
-            GoalActionStubScreen(
-                title = stringResource(R.string.delete_stub_title),
-                body = stringResource(R.string.delete_stub_body),
-                contentDescription = "Delete goal stub",
-                onBack = { navController.popBackStack() },
+        ) { backStackEntry ->
+            val goalId = checkNotNull(
+                backStackEntry.arguments?.getString(GoalDetailViewModel.NAV_ARG_GOAL_ID),
+            )
+            val viewModel: DeleteGoalViewModel = hiltViewModel()
+            DeleteGoalScreen(
+                viewModel = viewModel,
+                goalId = goalId,
+                onNavigateBack = {
+                    // Pop delete + detail so Goals tab reflects removal.
+                    navController.popBackStack(PiPlannerRoutes.GOALS_TAB, inclusive = false)
+                },
             )
         }
         composable(PiPlannerRoutes.SETTINGS) {

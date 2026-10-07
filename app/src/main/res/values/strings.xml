@@ -120,12 +120,26 @@
     <string name="history_type_credit">New credit</string>
     <string name="history_type_transfer">Transfer</string>
     <string name="history_type_withdrawal">Withdrawal</string>
-    <string name="history_type_deleted">Goal deleted</string>
+    <string name="history_type_deleted">Deleted / moved</string>
 
     <string name="transfer_stub_title">Transfer</string>
     <string name="transfer_stub_body">Transfer between goals lands in a later ticket. Navigation from Goal detail is wired.</string>
-    <string name="delete_stub_title">Delete goal</string>
-    <string name="delete_stub_body">Full delete / reassignment is out of scope for PIP-50. Navigation target is stubbed.</string>
+
+    <string name="delete_goal_title">Delete goal</string>
+    <string name="delete_goal_subtitle">%1$s will be removed. Assign its saved money to remaining goals.</string>
+    <string name="delete_goal_released_label">Amount to reassign</string>
+    <string name="delete_goal_reassign_heading">Move money to</string>
+    <string name="delete_goal_confirm">Delete and move</string>
+    <string name="delete_goal_confirm_title">Delete this goal?</string>
+    <string name="delete_goal_confirm_body">%1$s will be deleted. %2$s moves to the destinations you chose. Standing split renormalises.</string>
+    <string name="delete_goal_failed_title">Couldn’t delete goal</string>
+    <string name="delete_goal_missing">Goal not found.</string>
+    <string name="delete_goal_only_gate_title">Create a replacement goal</string>
+    <string name="delete_goal_only_gate_body">This is your only goal. Add a replacement before confirming delete.</string>
+    <string name="delete_goal_add_goal">Add another goal</string>
+    <string name="delete_goal_add_goal_title">Add a goal</string>
+    <string name="delete_goal_standing_reset_note">Standing split will reset to equal across remaining goals.</string>
+    <string name="delete_goal_edit_locked_note">Reassignment locked after one edit.</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_stub_body">Consent, Reset demo, and account preferences land in a later Settings ticket.</string>
