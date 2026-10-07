@@ -31,4 +31,6 @@
 
 ## Branch
 
-`PIP-52-standing-split` from `dac84393` (main after PIP-42 / PIP-50).
+`PIP-52-standing-split` rebased onto `7830826` (main after PIP-46 Goals tab).
+
+Entry point is Goals tab → Standing split (placeholder removed with PIP-46).
