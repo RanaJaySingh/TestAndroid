@@ -1,6 +1,6 @@
 # PIP-78 — Android Update balance / UPI Demo chrome visual
 
-**Status:** Implemented on `PIP-78-update-upi-visual` (rebased onto `1fcbdff` / PIP-74)  
+**Status:** Implemented on `PIP-78-update-upi-visual` (rebased onto `1f3bb8fa` / PIP-94; keep-both with PIP-84 Goals Update)  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-78/android-update-balance-upi-demo-chrome-visual  
 **PRD:** R8 · https://docs.google.com/document/d/18r0wSKMTpePcjCRYypcKbtabghuCyd_TPGWhLEee0AU/edit  
 **Spec:** §5.2 · https://docs.google.com/document/d/1pvhxAPCyLrLIzEBNkiUh5-lOA8y7onLiTgl_eJTnlhk/edit  
@@ -22,27 +22,30 @@
 
 | Type / file | Role |
 |-------------|------|
-| `ui/setup/UpdateBalanceUPIChrome.kt` | Shared choice rows, DEMO badge, bank masked line, PIN dots, mock pad |
+| `ui/setup/UpdateBalanceUPIChrome.kt` | Shared choice rows, DEMO badge, bank masked line, PIN dots, mock pad (`PiIcons.syncFilled`) |
 | `ui/setup/ConsentSheet.kt` | `UpdateBalanceSheet` choice rows; `OtherAppScreen` / `WrongPinScreen` CTAs + wrong-PIN visual |
 | `ui/setup/ManualBalanceScreen.kt` | ₹ amount in `PiCard`; navy `PrimaryCta` enabled / disabled at ₹0 |
 | `ui/setup/UPIPinScreen.kt` | Demo badge, bank masked line, mock pad, Check balance / Cancel |
-| `ui/goals/GoalsUpdateBalanceSheet.kt` | `PiSheet` + navy ₹ `PiCard` + `PrimaryCta` Apply (11a–11c visual; same apply flow) |
+
+## Keep-both (rebase onto `1f3bb8fa`)
+
+Conflict on `GoalsUpdateBalanceSheet.kt` vs PIP-84 (#27) on main: **kept main** Choice → Manual → Result flow + sync/withdrawal CTAs. PIP-78 owns setup Update / Manual / UPI Demo chrome only; Goals Update visual stays PIP-84.
 
 ## Visual summary
 
 | State | Chrome |
 |-------|--------|
 | Choice (4) | Title + helper; white choice rows (Manually / Balance sync) with icon, subtitle, chevron, soft card shadow |
-| Manual ₹0 (4a / 11b) | Large navy ₹ field on `PiCard`; `PrimaryCta` Continue muted / disabled |
+| Manual ₹0 (4a) | Large navy ₹ field on `PiCard`; `PrimaryCta` Continue muted / disabled |
 | Manual non-zero | Same field; Continue filled navy |
 | UPI PIN Demo (4b) | DEMO chip; bank masked line; navy PIN dots; card mock pad; Check balance primary + Cancel outline |
 | Wrong PIN (4d / 4e) | Destructive title + error dots; Try again primary / Enter manually outline |
 | Other app (4c) | Primary CTA Enter balance manually |
-| Goals Update (11) | PiSheet chrome; navy ₹ amount card; Apply muted at ₹0 |
+| Goals Update (11) | Unchanged from PIP-84 on main (keep-both) |
 
 ## Out of scope
 
-PIN validation / sync behaviour; ViewModel product logic; Welcome / Accounts / Consent Yes / Goals home / Sync Previous·Fetched·New (later tickets); iOS twin (PIP-77 Done).
+PIN validation / sync behaviour; ViewModel product logic; Welcome / Accounts / Consent Yes / Goals home / Sync Previous·Fetched·New / Settings (later tickets); Goals Update sheet chrome (PIP-84); iOS twin (PIP-77 Done).
 
 ## Verify
 
