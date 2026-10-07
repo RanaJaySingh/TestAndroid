@@ -12,7 +12,7 @@ import com.piplanner.ui.theme.PiPlannerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Compose host. Starts at Accounts (PIP-38); Opening split (PIP-44) remains in the nav graph.
+ * Compose host. First-run / post-reset → Welcome (PIP-36); CTA → Accounts (PIP-38).
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

@@ -2,6 +2,11 @@
 <resources>
     <string name="app_name">PiPlanner</string>
 
+    <string name="welcome_tagline">Every Rupee Has a Plan.</string>
+    <string name="welcome_subtitle">Every credit to savings gets a goal before it can be spent.</string>
+    <string name="welcome_how_it_works">How it works</string>
+    <string name="welcome_cta">Set up savings</string>
+
     <string name="accounts_step_label">Step 1 of 3</string>
     <string name="accounts_title">Choose your Dedicated savings</string>
     <string name="accounts_subtitle">Exactly one account can be Dedicated. Credits to that account are assigned to goals.</string>
