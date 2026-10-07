@@ -1,6 +1,8 @@
 # PIP-82 — Android Goals home navy card, quick actions, banner, header chrome
 
 **Status:** Implemented on `cursor/pip-82-goals-home-visual-590e` (from `1f3bb8f`)  
+**PR:** https://github.com/RanaJaySingh/TestAndroid/pull/33 (ready, not merged)  
+**Head SHA:** `d7ba46fb8616f712e500b56b3f72478f2268013a` · **Base tip:** `1f3bb8fa926265df96f4324af374522d1b2da7db`  
 **Linear:** https://linear.app/telco-paytm/issue/PIP-82/android-goals-home-navy-card-quick-actions-banner-header-chrome  
 **PRD:** R10, R20 · https://docs.google.com/document/d/18r0wSKMTpePcjCRYypcKbtabghuCyd_TPGWhLEee0AU/edit  
 **Spec:** §5.2 J2 · https://docs.google.com/document/d/1pvhxAPCyLrLIzEBNkiUh5-lOA8y7onLiTgl_eJTnlhk/edit  
