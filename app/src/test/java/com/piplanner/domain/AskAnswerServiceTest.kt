@@ -33,13 +33,13 @@ class AskAnswerServiceTest {
     fun inflationChip_mentionsDefaultRateAndAdjustedTargets() {
         val goals = DemoData.sampleOpeningSplitGoals()
         val text = service.plainAnswer(
-            query = "Why is inflation 7%?",
+            query = "Why is inflation 5%?",
             goals = goals,
             standingSplits = emptyList(),
             totalSavingsPaisa = 10_000_000L,
         )
 
-        assertThat(text).contains("7%")
+        assertThat(text).contains("5%")
         assertThat(text).contains("Car")
         assertThat(text).contains(formatting.formatInrFromPaisa(goals[0].adjustedTarget()))
     }

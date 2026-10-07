@@ -53,11 +53,11 @@ class AskViewModelTest {
     fun chipQuestion_showsPlainAnswerWithEngineNumbers() = runTest {
         val vm = viewModel()
         advanceUntilIdle()
-        vm.selectChip("Why is inflation 7%?")
+        vm.selectChip("Why is inflation 5%?")
         advanceUntilIdle()
 
         assertThat(vm.uiState.value.phase).isEqualTo(AskPhase.PlainAnswer)
-        assertThat(vm.uiState.value.plainAnswer).contains("7%")
+        assertThat(vm.uiState.value.plainAnswer).contains("5%")
         assertThat(vm.uiState.value.plainAnswer).contains("Car")
         assertThat(vm.uiState.value.proposedAction).isNull()
     }

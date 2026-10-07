@@ -1,6 +1,7 @@
 package com.piplanner.domain
 
 import com.google.common.truth.Truth.assertThat
+import com.piplanner.data.model.Goal
 import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -68,16 +69,17 @@ class GoalValidationServiceTest {
     }
 
     @Test
-    fun defaultInflation_isSevenPercent() {
-        assertThat(GoalValidationService.DEFAULT_INFLATION_RATE).isEqualTo(0.07)
+    fun defaultInflation_isFivePercent() {
+        assertThat(GoalValidationService.DEFAULT_INFLATION_RATE).isEqualTo(0.05)
+        assertThat(Goal.DEFAULT_INFLATION_RATE).isEqualTo(0.05)
     }
 
     @Test
     fun adjustedTarget_updatesWithInflation() {
         val target = 10_000_000L // ₹1,00,000
-        val at7 = validation.adjustedTargetPaisa(
+        val at5 = validation.adjustedTargetPaisa(
             targetPaisa = target,
-            inflationRate = 0.07,
+            inflationRate = 0.05,
             startDate = start,
             endDate = end,
         )
@@ -88,7 +90,19 @@ class GoalValidationServiceTest {
             endDate = end,
         )
         assertThat(at0).isEqualTo(target)
-        assertThat(at7).isGreaterThan(at0)
+        assertThat(at5).isGreaterThan(at0)
+    }
+
+    @Test
+    fun parseInflationPercentInput_acceptsBoundsAndRejectsInvalid() {
+        assertThat(GoalValidationService.parseInflationPercentInput("5")).isEqualTo(0.05)
+        assertThat(GoalValidationService.parseInflationPercentInput("0")).isEqualTo(0.0)
+        assertThat(GoalValidationService.parseInflationPercentInput("30")).isEqualTo(0.30)
+        assertThat(GoalValidationService.parseInflationPercentInput("")).isNull()
+        assertThat(GoalValidationService.parseInflationPercentInput("abc")).isNull()
+        assertThat(GoalValidationService.parseInflationPercentInput("5.5")).isNull()
+        assertThat(GoalValidationService.parseInflationPercentInput("-1")).isNull()
+        assertThat(GoalValidationService.parseInflationPercentInput("31")).isNull()
     }
 
     @Test
