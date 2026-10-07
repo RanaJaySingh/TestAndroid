@@ -27,9 +27,10 @@
 | `ui/setup/ManualBalanceScreen.kt` | ₹ amount in `PiCard`; navy `PrimaryCta` enabled / disabled at ₹0 |
 | `ui/setup/UPIPinScreen.kt` | Demo badge, bank masked line, mock pad, Check balance / Cancel |
 
-## Keep-both (rebase onto `1f3bb8fa`)
+## Keep-both
 
-Conflict on `GoalsUpdateBalanceSheet.kt` vs PIP-84 (#27) on main: **kept main** Choice → Manual → Result flow + sync/withdrawal CTAs. PIP-78 owns setup Update / Manual / UPI Demo chrome only; Goals Update visual stays PIP-84.
+- Onto `1f3bb8fa` (PIP-94): conflict on `GoalsUpdateBalanceSheet.kt` vs PIP-84 (#27) — **kept main** Choice → Manual → Result + sync/withdrawal CTAs. PIP-78 owns setup Update / Manual / UPI Demo chrome only.
+- Onto `1a77a3b8` (PIP-90 Standing/Transfer/Withdrawal/Delete sheets): no shared-file conflicts; both sides retained (PIP-90 goals sheets + PIP-78 setup chrome).
 
 ## Visual summary
 
