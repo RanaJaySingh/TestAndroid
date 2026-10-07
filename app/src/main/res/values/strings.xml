@@ -31,7 +31,9 @@
     <string name="update_balance_title">Update balance</string>
     <string name="update_balance_subtitle">How do you want to set the opening balance?</string>
     <string name="update_balance_manually">Manually</string>
+    <string name="update_balance_manually_subtitle">Type the opening balance</string>
     <string name="update_balance_sync">Balance sync</string>
+    <string name="update_balance_sync_subtitle">Check with demo UPI PIN</string>
 
     <string name="manual_balance_title">Enter opening balance</string>
     <string name="manual_balance_subtitle">Type the current balance of your dedicated savings. No withdrawal link during setup.</string>
@@ -39,7 +41,9 @@
     <string name="manual_balance_save_failed_title">Couldn’t save balance</string>
 
     <string name="upi_pin_title">Demo UPI PIN</string>
-    <string name="upi_pin_subtitle">Enter the 4-digit demo PIN to check balance. Demo PIN is 1234.</string>
+    <string name="upi_pin_subtitle">Enter the 4-digit demo PIN to check balance.</string>
+    <string name="upi_pin_demo_hint">Demo PIN is 1234</string>
+    <string name="upi_pin_no_debit">No money is debited.</string>
     <string name="upi_pin_check_balance">Check balance</string>
     <string name="upi_pin_other_app">Account on another UPI app</string>
 
