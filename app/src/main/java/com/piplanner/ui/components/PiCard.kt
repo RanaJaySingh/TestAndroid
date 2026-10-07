@@ -11,16 +11,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import com.piplanner.ui.theme.PiPlannerColors
 import com.piplanner.ui.theme.PiPlannerDimens
 
 /**
  * Shared white content card (PRD R2 / Tech Spec §3.5).
  * White surface, radius 20–24 (token 22), soft elevation.
+ *
+ * @param contentPadding inner padding; default [PiPlannerDimens.Space16] (Welcome may use Space20).
  */
 @Composable
 fun PiCard(
     modifier: Modifier = Modifier,
+    contentPadding: Dp = PiPlannerDimens.Space16,
     contentDescription: String = "Pi card",
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -35,7 +39,7 @@ fun PiCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(PiPlannerDimens.Space16),
+                .padding(contentPadding),
             content = content,
         )
     }
