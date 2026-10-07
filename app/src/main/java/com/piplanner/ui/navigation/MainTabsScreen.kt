@@ -67,6 +67,13 @@ fun MainTabsScreen(
                     onOpenWithdrawal = onOpenWithdrawal,
                     onOpenStandingSplit = onOpenStandingSplit,
                     onOpenTransfer = onOpenTransfer,
+                    onOpenHistory = {
+                        selectedIndex = MainTabChrome.Tab.History.index
+                    },
+                    onOpenNewGoal = {
+                        // Post-setup goal creation lives on Ask (GoalForm); no new Goals flow.
+                        selectedIndex = MainTabChrome.Tab.Ask.index
+                    },
                 )
                 MainTabChrome.Tab.History.index -> HistoryTab(
                     viewModel = historyViewModel,

@@ -1,5 +1,6 @@
 package com.piplanner.ui.goals
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,13 +24,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
+import com.piplanner.domain.GoalsTabService
 import com.piplanner.ui.theme.PiIcons
+import com.piplanner.ui.theme.PiPlannerColors
+import com.piplanner.ui.theme.PiPlannerDimens
+import com.piplanner.ui.theme.PiPlannerTypography
 
 /**
- * Goals tab — design frames 9 / 9b / 9c / 11 with Sync/Update credit entry (PIP-48).
+ * Goals tab — design frames 9 / 9b / 9c / 11 with Sync/Update credit entry (PIP-48)
+ * and navy home visual chrome (PIP-82).
  */
 @Composable
 fun GoalsTab(
@@ -39,8 +43,10 @@ fun GoalsTab(
     onOpenSettings: () -> Unit,
     onOpenCreditEntry: (String) -> Unit,
     onOpenWithdrawal: (previousPaisa: Long, newPaisa: Long, isTyped: Boolean) -> Unit,
-    onOpenStandingSplit: () -> Unit = {},
+    @Suppress("UNUSED_PARAMETER") onOpenStandingSplit: () -> Unit = {},
     onOpenTransfer: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
+    onOpenNewGoal: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -80,14 +86,17 @@ fun GoalsTab(
 
     GoalsTabContent(
         uiState = uiState,
-        formattedSavedAmount = viewModel::formattedSavedAmount,
+        formattedSavedOfTarget = viewModel::formattedSavedOfTarget,
         statusLabel = viewModel::statusLabel,
+        monthlyNeedLabel = viewModel::monthlyNeedLabel,
+        creditsPercentLabel = viewModel::creditsPercentLabel,
         onBalanceAction = viewModel::tapBalanceAction,
         onGoalClick = { goalId -> viewModel.selectGoal(goalId) },
         onSettingsClick = viewModel::openSettings,
-        onStandingSplitClick = onOpenStandingSplit,
-        onRecordWithdrawalClick = viewModel::openRecordWithdrawal,
+        onNewGoalClick = onOpenNewGoal,
         onTransferClick = onOpenTransfer,
+        onHistoryClick = onOpenHistory,
+        onRecordWithdrawalClick = viewModel::openRecordWithdrawal,
         onDismissError = viewModel::clearError,
         onDismissSync = viewModel::dismissSyncSheet,
         onConfirmSync = viewModel::performSync,
@@ -107,14 +116,17 @@ fun GoalsTab(
 @Composable
 fun GoalsTabContent(
     uiState: GoalsUiState,
-    formattedSavedAmount: (com.piplanner.data.model.Goal) -> String,
+    formattedSavedOfTarget: (com.piplanner.data.model.Goal) -> String,
     statusLabel: (com.piplanner.data.model.Goal) -> String,
+    monthlyNeedLabel: (com.piplanner.data.model.Goal) -> String,
+    creditsPercentLabel: (com.piplanner.data.model.Goal) -> String,
     onBalanceAction: () -> Unit,
     onGoalClick: (String) -> Unit,
     onSettingsClick: () -> Unit,
-    onStandingSplitClick: () -> Unit = {},
-    onRecordWithdrawalClick: () -> Unit = {},
+    onNewGoalClick: () -> Unit = {},
     onTransferClick: () -> Unit = {},
+    onHistoryClick: () -> Unit = {},
+    onRecordWithdrawalClick: () -> Unit = {},
     onDismissError: () -> Unit,
     onDismissSync: () -> Unit,
     onConfirmSync: () -> Unit,
@@ -129,129 +141,102 @@ fun GoalsTabContent(
     onDismissRecordWithdrawal: () -> Unit = {},
     onContinueRecordWithdrawal: (Long) -> Unit = {},
 ) {
+    val balanceActionEnabled = !uiState.isSyncOrUpdateBlocked
+    val quickBalanceTitle = GoalsTabService.quickBalanceActionTitle(uiState.balanceAction)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(PiPlannerColors.BackgroundApp)
             .semantics { contentDescription = "Goals tab" },
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = uiState.greeting,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.semantics {
-                        contentDescription = "goals.greeting"
-                    },
-                )
-                Text(
-                    text = stringResource(R.string.goals_tab_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            IconButton(
-                onClick = onSettingsClick,
-                modifier = Modifier.semantics { contentDescription = "Settings" },
-            ) {
-                Icon(
-                    imageVector = PiIcons.settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-
-        uiState.openEntryBannerMessage?.let { message ->
-            OpenEntryBanner(
-                message = message,
-                onAssignNow = onAssignNow,
-            )
-        }
+        GoalsHomeHeader(
+            greeting = uiState.greeting,
+            onSettingsClick = onSettingsClick,
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = PiPlannerDimens.Space16)
+                .padding(bottom = PiPlannerDimens.Space24),
+            verticalArrangement = Arrangement.spacedBy(PiPlannerDimens.Space20),
         ) {
+            uiState.openEntryBannerMessage?.let { message ->
+                OpenEntryBanner(
+                    message = message,
+                    onAssignNow = onAssignNow,
+                )
+            }
+
             BalanceCard(
                 formattedTotal = uiState.formattedTotalSavings,
                 accountSubtitle = uiState.dedicatedAccountSubtitle,
+                lastActivityLine = uiState.lastActivityLine,
                 actionTitle = uiState.balanceActionTitle,
+                actionEnabled = balanceActionEnabled,
                 onAction = onBalanceAction,
             )
+
+            QuickActionRow(
+                balanceActionTitle = quickBalanceTitle,
+                balanceActionEnabled = balanceActionEnabled,
+                transferEnabled = uiState.goals.size >= 2,
+                onBalanceAction = onBalanceAction,
+                onNewGoal = onNewGoalClick,
+                onTransfer = onTransferClick,
+                onHistory = onHistoryClick,
+            )
+
+            TextButton(
+                onClick = onRecordWithdrawalClick,
+                modifier = Modifier.semantics {
+                    contentDescription = "Record a withdrawal"
+                },
+            ) {
+                Text(
+                    text = stringResource(R.string.withdrawal_record_cta),
+                    color = PiPlannerColors.NavyPrimary,
+                    style = PiPlannerTypography.caption,
+                )
+            }
 
             when {
                 uiState.isLoading && !uiState.hasGoals -> {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
-                            .padding(24.dp),
+                            .padding(PiPlannerDimens.Space24),
+                        color = PiPlannerColors.NavyPrimary,
                     )
                 }
                 uiState.hasGoals -> {
                     Text(
                         text = stringResource(R.string.goals_section_header),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = PiPlannerTypography.title,
                         fontWeight = FontWeight.SemiBold,
+                        color = PiPlannerColors.OnSurface,
                         modifier = Modifier.semantics {
                             contentDescription = "Your goals section"
                         },
                     )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        TextButton(
-                            onClick = onStandingSplitClick,
-                            modifier = Modifier.semantics {
-                                contentDescription = "Open standing split"
-                            },
-                        ) {
-                            Text(stringResource(R.string.standing_split_title))
-                        }
-                        TextButton(
-                            onClick = onTransferClick,
-                            modifier = Modifier.semantics {
-                                contentDescription = "Open transfer"
-                            },
-                        ) {
-                            Text(stringResource(R.string.transfer_open))
-                        }
-                    }
-                    TextButton(
-                        onClick = onRecordWithdrawalClick,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Record a withdrawal"
-                        },
-                    ) {
-                        Text(stringResource(R.string.withdrawal_record_cta))
-                    }
                     uiState.goals.forEach { goal ->
                         GoalCard(
                             name = goal.name,
-                            formattedSaved = formattedSavedAmount(goal),
+                            formattedSavedOfTarget = formattedSavedOfTarget(goal),
                             statusLabel = statusLabel(goal),
+                            monthlyNeedLabel = monthlyNeedLabel(goal),
+                            creditsPercentLabel = creditsPercentLabel(goal),
                             onClick = { onGoalClick(goal.id) },
-                            modifier = Modifier.semantics {
-                                contentDescription = "Goal card ${goal.name}"
-                            },
                         )
                     }
                 }
                 else -> {
                     Text(
                         text = stringResource(R.string.goals_empty),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = PiPlannerTypography.body,
+                        color = PiPlannerColors.OnSurface.copy(alpha = 0.62f),
                         modifier = Modifier.semantics {
                             contentDescription = "No goals yet"
                         },
@@ -318,4 +303,83 @@ fun GoalsTabContent(
             },
         )
     }
+}
+
+/**
+ * Goals header — greeting + chrome-only Search / notifications / chart + Settings gear
+ * (A2 / R20 — no new flows from header icons).
+ */
+@Composable
+private fun GoalsHomeHeader(
+    greeting: String,
+    onSettingsClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PiPlannerDimens.Space8, vertical = PiPlannerDimens.Space8),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = PiPlannerDimens.Space8),
+        ) {
+            Text(
+                text = greeting,
+                style = PiPlannerTypography.body,
+                color = PiPlannerColors.OnSurface.copy(alpha = 0.72f),
+                modifier = Modifier.semantics {
+                    contentDescription = "goals.greeting"
+                },
+            )
+            Text(
+                text = stringResource(R.string.goals_tab_title),
+                style = PiPlannerTypography.title,
+                fontWeight = FontWeight.SemiBold,
+                color = PiPlannerColors.OnSurface,
+            )
+        }
+        HeaderChromeIcon(
+            icon = PiIcons.headerSearch,
+            label = "Search",
+        )
+        HeaderChromeIcon(
+            icon = PiIcons.headerNotifications,
+            label = "Notifications",
+        )
+        HeaderChromeIcon(
+            icon = PiIcons.headerChart,
+            label = "Chart",
+        )
+        IconButton(
+            onClick = onSettingsClick,
+            modifier = Modifier.semantics { contentDescription = "Settings" },
+        ) {
+            Icon(
+                imageVector = PiIcons.settings,
+                contentDescription = "Settings",
+                tint = PiPlannerColors.NavyPrimary.copy(alpha = 0.85f),
+            )
+        }
+    }
+}
+
+/** Non-interactive header chrome icon (A2 / R20). */
+@Composable
+private fun HeaderChromeIcon(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+) {
+    Icon(
+        imageVector = icon,
+        contentDescription = label,
+        tint = PiPlannerColors.NavyPrimary.copy(alpha = 0.85f),
+        modifier = Modifier
+            .padding(horizontal = PiPlannerDimens.Space8)
+            .semantics {
+                contentDescription = "goals.header.${label.lowercase()}"
+            },
+    )
 }

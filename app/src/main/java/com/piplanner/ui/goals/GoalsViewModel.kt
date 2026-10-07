@@ -376,6 +376,25 @@ class GoalsViewModel @Inject constructor(
     fun statusLabel(goal: Goal): String =
         goalsTabService.statusLabel(goal.status())
 
+    /** Presentation-only goal card line — "₹60,000 of ₹13,10,796" (PIP-82 / R10). */
+    fun formattedSavedOfTarget(goal: Goal): String =
+        GoalsTabService.savedOfTargetLabel(
+            savedPaisa = goal.savedAmount,
+            targetPaisa = goal.adjustedTarget(),
+            formatting = formattingService,
+        )
+
+    /** Presentation-only — "Needs ₹26,058 a month". */
+    fun monthlyNeedLabel(goal: Goal): String =
+        GoalsTabService.monthlyNeedLabel(
+            monthlyNeedPaisa = goal.monthlyNeed(),
+            formatting = formattingService,
+        )
+
+    /** Presentation-only — "60% of credits". */
+    fun creditsPercentLabel(goal: Goal): String =
+        GoalsTabService.creditsPercentLabel(goal.shareOfNewCredits)
+
     private suspend fun processBalanceOutcome(
         fetchedBalance: Long,
         dedicatedAccountId: String,
@@ -554,6 +573,10 @@ class GoalsViewModel @Inject constructor(
                 formattedPreviousBalance = formattingService.formatInrFromPaisa(
                     dedicated?.balance ?: 0L,
                 ),
+                lastActivityLine = GoalsTabService.lastBalanceActivityLine(
+                    action = action,
+                    reference = GoalsTabService.lastBalanceActivityInstant(state.history),
+                ),
             )
         }
     }
@@ -590,6 +613,11 @@ data class GoalsUiState(
     val openCreditEntryId: String? = null,
     val openEntryBannerMessage: String? = null,
     val isSyncOrUpdateBlocked: Boolean = false,
+    /** Navy card last-synced / last-updated line (PIP-82 / R10). */
+    val lastActivityLine: String = GoalsTabService.lastBalanceActivityLine(
+        action = GoalsBalanceAction.UpdateBalance,
+        reference = null,
+    ),
     val withdrawalShortfallPaisa: Long? = null,
     val withdrawalPreviousBalancePaisa: Long? = null,
     val withdrawalNewBalancePaisa: Long? = null,
