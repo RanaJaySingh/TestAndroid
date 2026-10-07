@@ -81,6 +81,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
+    // Robolectric / androidx.test.core intentionally omitted: PersistenceServiceResetTest
+    // uses a JVM temp-file DataStore so CI cannot flake on MavenArtifactFetcher downloads.
 }

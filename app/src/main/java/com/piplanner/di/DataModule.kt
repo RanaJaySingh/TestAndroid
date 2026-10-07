@@ -7,6 +7,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.piplanner.data.local.DataStorePersistenceService
 import com.piplanner.data.local.PersistenceService
+import com.piplanner.domain.BalanceSyncService
+import com.piplanner.domain.MockBalanceSyncService
+import com.piplanner.util.DemoData
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -37,6 +40,21 @@ object DataProvideModule {
     ): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
             produceFile = { context.preferencesDataStoreFile(DATA_STORE_FILE) },
+        )
+    }
+
+    /**
+     * Spec §3.3 mock — injectable so a real BalanceSyncService can replace it later.
+     * Known IDs match demo persona accounts (HDFC / SBI).
+     */
+    @Provides
+    @Singleton
+    fun provideBalanceSyncService(): BalanceSyncService {
+        return MockBalanceSyncService(
+            knownAccountIds = setOf(
+                DemoData.DEMO_SAVINGS_ACCOUNT_ID,
+                DemoData.DEMO_SPENDING_ACCOUNT_ID,
+            ),
         )
     }
 
