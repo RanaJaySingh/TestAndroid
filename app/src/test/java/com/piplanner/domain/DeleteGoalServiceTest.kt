@@ -130,11 +130,11 @@ class DeleteGoalServiceTest {
         assertThat(emergency.savedAmount).isEqualTo(4_000_000L + 3_600_000L)
         assertThat(house.savedAmount).isEqualTo(2_400_000L)
         assertThat(standingSplitService.isValidHundred(next.standingSplits)).isTrue()
-        // Prior survivors 0.30 + 0.20 → 0.75 / 0.25 after renormalize
+        // Prior survivors 0.30 + 0.20 = 0.50 → 0.60 / 0.40 after renormalize
         assertThat(next.standingSplits.first { it.goalId == DemoData.DEMO_EMERGENCY_GOAL_ID }.percentage)
-            .isEqualTo(0.75)
+            .isEqualTo(0.6)
         assertThat(next.standingSplits.first { it.goalId == third.id }.percentage)
-            .isEqualTo(0.25)
+            .isEqualTo(0.4)
     }
 
     @Test
