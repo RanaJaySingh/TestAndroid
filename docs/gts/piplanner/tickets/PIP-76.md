@@ -62,11 +62,11 @@ Compare device/emulator (or Compose previews) to design artifact:
 
 ## Parallel work / base
 
-Started from `33b810ba` (main after PIP-70 #20). Previously rebased onto `1fcbdff7` (PIP-74) then `1f3bb8fa` (PIP-94). **Current tip:** rebased onto `1a77a3b8` (main after PIP-90 sheets visual #30). Keep-both on shared files (no conflicts vs PIP-90; earlier keep-both retained PIP-76 role labels + tip strings). Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, components foundation, Welcome (PIP-74), Update/UPI (PIP-78), sheets (PIP-90).
+Started from `33b810ba` (main after PIP-70 #20). Previously rebased onto `1fcbdff7` / `1f3bb8fa` / `1a77a3b8`. **Current tip:** rebased onto `4552dca4` (main after PIP-78 Update/UPI #29; also includes PIP-82). Keep-both on `ConsentSheet.kt` (PIP-76 Consent+FetchedBalance chrome + PIP-78 Update/Other/WrongPin choice rows & CTAs) and `strings.xml`. Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, Welcome (PIP-74), Goals home (PIP-82), sheets (PIP-90).
 
 ## Test results
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** on prior tip `@1f3bb8fa`; re-verify via GitHub CI after rebase onto `1a77a3b8`.
+`./gradlew assembleDebug test` — prior tips green; re-verify via GitHub CI after rebase onto `4552dca4`.
 
 ## How to run tests
 
