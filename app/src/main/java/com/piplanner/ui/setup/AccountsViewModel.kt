@@ -57,7 +57,7 @@ class AccountsViewModel @Inject constructor(
     }
 
     /**
-     * Persists accounts (with dedicated flag) and signals navigation to Consent (PIP-40 placeholder).
+     * Persists accounts (with dedicated flag) and signals navigation to Consent (PIP-40).
      */
     fun onContinue() {
         val state = _uiState.value

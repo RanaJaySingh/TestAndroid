@@ -14,8 +14,41 @@
     <string name="continue_label">Continue</string>
     <string name="accounts_save_failed_title">Couldn’t save account</string>
 
-    <string name="consent_placeholder_title">Consent</string>
-    <string name="consent_placeholder_body">Dedicated account selected. Consent sheet and balance entry arrive in PIP-40.</string>
+    <string name="consent_step_label">Step 2 of 3</string>
+    <string name="consent_title">Allow balance checks?</string>
+    <string name="consent_subtitle">Asked for the account where credits arrive.</string>
+    <string name="consent_subtitle_named">Asked for %1$s, where credits arrive.</string>
+    <string name="consent_yes">Yes, update automatically</string>
+    <string name="consent_no">No, I’ll update it myself</string>
+    <string name="consent_fetch_failed_title">Couldn’t update balance</string>
+
+    <string name="fetched_balance_title">Opening balance</string>
+    <string name="fetched_balance_subtitle">Fetched from your dedicated savings account.</string>
+    <string name="balance_label">Balance</string>
+
+    <string name="update_balance_title">Update balance</string>
+    <string name="update_balance_subtitle">How do you want to set the opening balance?</string>
+    <string name="update_balance_manually">Manually</string>
+    <string name="update_balance_sync">Balance sync</string>
+
+    <string name="manual_balance_title">Enter opening balance</string>
+    <string name="manual_balance_subtitle">Type the current balance of your dedicated savings. No withdrawal link during setup.</string>
+    <string name="amount_label">Amount</string>
+    <string name="manual_balance_save_failed_title">Couldn’t save balance</string>
+
+    <string name="upi_pin_title">Demo UPI PIN</string>
+    <string name="upi_pin_subtitle">Enter the 4-digit demo PIN to check balance. Demo PIN is 1234.</string>
+    <string name="upi_pin_check_balance">Check balance</string>
+    <string name="upi_pin_other_app">Account on another UPI app</string>
+
+    <string name="other_app_title">Account on another UPI app</string>
+    <string name="other_app_body">This savings account looks linked in another UPI app. Enter the balance manually to continue setup.</string>
+    <string name="other_app_cta">Enter balance manually</string>
+
+    <string name="wrong_pin_title">Incorrect PIN</string>
+    <string name="wrong_pin_body">Incorrect PIN. Try again or enter the balance manually.</string>
+    <string name="wrong_pin_retry">Try again</string>
+    <string name="wrong_pin_manual">Enter manually</string>
 
     <string name="opening_split_title">Assign your opening balance</string>
     <string name="opening_split_title_readonly">Opening balance</string>
