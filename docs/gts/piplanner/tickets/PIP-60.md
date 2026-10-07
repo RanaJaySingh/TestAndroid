@@ -44,7 +44,7 @@ History tab listing all History entries with open vs locked navigation (PRD R16 
 
 ## Test result
 
-`./gradlew assembleDebug test` — run on PR verification.
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL**.
 
 ## Assumptions
 
