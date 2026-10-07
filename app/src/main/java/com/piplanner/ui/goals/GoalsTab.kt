@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.piplanner.R
+import com.piplanner.ui.theme.PiIcons
 
 /**
  * Goals tab — design frames 9 / 9b / 9c / 11 with Sync/Update credit entry (PIP-48).
@@ -156,9 +158,10 @@ fun GoalsTabContent(
                 onClick = onSettingsClick,
                 modifier = Modifier.semantics { contentDescription = "Settings" },
             ) {
-                Text(
-                    text = "⚙",
-                    style = MaterialTheme.typography.titleLarge,
+                Icon(
+                    imageVector = PiIcons.settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

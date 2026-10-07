@@ -50,6 +50,9 @@ class HistoryServiceTest {
         HistoryEntryType.entries.forEach { type ->
             assertThat(service.typeLabel(type)).isNotEmpty()
             assertThat(service.typeIcon(type)).isNotEmpty()
+            // PIP-72: Material names, not glyph placeholders.
+            assertThat(service.typeIcon(type)).doesNotContain("◎")
+            assertThat(service.typeIcon(type)).isNotEqualTo("?")
         }
         assertThat(service.typeLabel(HistoryEntryType.OpeningBalance))
             .isEqualTo("Opening balance")
@@ -59,6 +62,12 @@ class HistoryServiceTest {
         assertThat(service.typeLabel(HistoryEntryType.GoalDeleted))
             .isEqualTo(HistoryService.TYPE_GOAL_DELETED)
         assertThat(HistoryService.TYPE_GOAL_DELETED).isEqualTo("Goal deleted")
+        assertThat(service.typeIcon(HistoryEntryType.NewCredit))
+            .isEqualTo(HistoryService.TYPE_ICON_NEW_CREDIT)
+        assertThat(service.typeIcon(HistoryEntryType.Transfer))
+            .isEqualTo(HistoryService.TYPE_ICON_TRANSFER)
+        assertThat(service.typeIcon(HistoryEntryType.Withdrawal))
+            .isEqualTo(HistoryService.TYPE_ICON_WITHDRAWAL)
         // Writer title may remain "Deleted / moved" elsewhere (PIP-54); list label is distinct.
         assertThat(DeleteGoalService.historyTitle).isEqualTo("Deleted / moved")
         assertThat(service.typeLabel(HistoryEntryType.GoalDeleted))

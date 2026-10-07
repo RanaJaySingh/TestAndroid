@@ -34,14 +34,17 @@ class HistoryService @Inject constructor(
         }
     }
 
-    /** Distinguishing glyph for the row icon (Compose has no Material Icons dependency). */
+    /**
+     * Material icon name for the row icon (PIP-72 / Spec §3.3).
+     * UI resolves via [com.piplanner.ui.theme.PiIcons.resolve].
+     */
     fun typeIcon(type: HistoryEntryType): String {
         return when (type) {
-            HistoryEntryType.OpeningBalance -> "◎"
-            HistoryEntryType.NewCredit -> "+"
-            HistoryEntryType.Transfer -> "↔"
-            HistoryEntryType.Withdrawal -> "−"
-            HistoryEntryType.GoalDeleted -> "×"
+            HistoryEntryType.OpeningBalance -> TYPE_ICON_OPENING
+            HistoryEntryType.NewCredit -> TYPE_ICON_NEW_CREDIT
+            HistoryEntryType.Transfer -> TYPE_ICON_TRANSFER
+            HistoryEntryType.Withdrawal -> TYPE_ICON_WITHDRAWAL
+            HistoryEntryType.GoalDeleted -> TYPE_ICON_GOAL_DELETED
         }
     }
 
@@ -118,6 +121,14 @@ class HistoryService @Inject constructor(
         const val TYPE_WITHDRAWAL: String = "Withdrawal"
         /** History list label for GoalDeleted (AC2 / PIP-59 parity). */
         const val TYPE_GOAL_DELETED: String = "Goal deleted"
+
+        /** Spec §3.3 Material icon names (PIP-72) — keep in sync with PiIcons.Name. */
+        const val TYPE_ICON_OPENING: String = "savings"
+        const val TYPE_ICON_NEW_CREDIT: String = "add_circle"
+        const val TYPE_ICON_TRANSFER: String = "swap_horiz"
+        const val TYPE_ICON_WITHDRAWAL: String = "arrow_downward"
+        const val TYPE_ICON_GOAL_DELETED: String = "delete"
+
         const val ASSIGN_NOW_SUBTITLE: String = "Assign now"
         const val TYPED_BADGE: String = "Typed"
 
