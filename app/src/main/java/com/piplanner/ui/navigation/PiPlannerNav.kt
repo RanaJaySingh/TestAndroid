@@ -14,11 +14,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.piplanner.ui.AppViewModel
 import com.piplanner.ui.goals.GoalsTabPlaceholder
+import com.piplanner.data.model.Goal
 import com.piplanner.ui.setup.AccountsScreen
 import com.piplanner.ui.setup.AccountsViewModel
 import com.piplanner.ui.setup.ConsentSheet
 import com.piplanner.ui.setup.ConsentViewModel
 import com.piplanner.ui.setup.FetchedBalanceScreen
+import com.piplanner.ui.setup.GoalChatScreen
+import com.piplanner.ui.setup.GoalChatViewModel
 import com.piplanner.ui.setup.ManualBalanceScreen
 import com.piplanner.ui.setup.OpeningSplitScreen
 import com.piplanner.ui.setup.OpeningSplitViewModel
@@ -40,6 +43,7 @@ object PiPlannerRoutes {
     const val UPI_PIN: String = "upi_pin"
     const val OTHER_APP: String = "other_app"
     const val WRONG_PIN: String = "wrong_pin"
+    const val GOAL_CHAT: String = "goal_chat"
     const val OPENING_SPLIT: String = "opening_split"
     const val GOALS_TAB: String = "goals_tab"
 }
@@ -47,7 +51,7 @@ object PiPlannerRoutes {
 /**
  * App navigation host.
  * First-run / post–Reset → Welcome (PIP-36); CTA → Accounts (PIP-38);
- * Consent + balance entry (PIP-40) → Opening split (PIP-44) with resolved paisa;
+ * Consent + balance entry (PIP-40) → Goal chat/form (PIP-42) → Opening split (PIP-44);
  * setup complete → Goals tab.
  */
 @Composable
@@ -56,9 +60,11 @@ fun PiPlannerNavHost(
     appViewModel: AppViewModel = hiltViewModel(),
 ) {
     val demoAccounts = remember { DemoData.sampleAccounts() }
-    val demoGoals = remember { DemoData.sampleOpeningSplitGoals() }
     var resolvedOpeningBalance by remember {
         mutableLongStateOf(DemoData.SAVINGS_OPENING_BALANCE_PAISA)
+    }
+    var definedGoalsForOpening by remember {
+        mutableStateOf<List<Goal>>(emptyList())
     }
 
     var startDestination by remember { mutableStateOf<String?>(null) }
@@ -117,7 +123,7 @@ fun PiPlannerNavHost(
                     resolvedOpeningBalance =
                         viewModel.uiState.value.resolvedBalancePaisa
                             ?: DemoData.SAVINGS_OPENING_BALANCE_PAISA
-                    navController.navigate(PiPlannerRoutes.OPENING_SPLIT)
+                    navController.navigate(PiPlannerRoutes.GOAL_CHAT)
                 },
             )
         }
@@ -142,7 +148,7 @@ fun PiPlannerNavHost(
                     resolvedOpeningBalance =
                         viewModel.uiState.value.resolvedBalancePaisa
                             ?: DemoData.SAVINGS_OPENING_BALANCE_PAISA
-                    navController.navigate(PiPlannerRoutes.OPENING_SPLIT)
+                    navController.navigate(PiPlannerRoutes.GOAL_CHAT)
                 },
             )
         }
@@ -196,11 +202,27 @@ fun PiPlannerNavHost(
                 },
             )
         }
+        composable(PiPlannerRoutes.GOAL_CHAT) {
+            val viewModel: GoalChatViewModel = hiltViewModel()
+            LaunchedEffect(Unit) {
+                viewModel.reset()
+            }
+            GoalChatScreen(
+                viewModel = viewModel,
+                onContinueToOpeningSplit = { goals ->
+                    definedGoalsForOpening = goals
+                    navController.navigate(PiPlannerRoutes.OPENING_SPLIT)
+                },
+            )
+        }
         composable(PiPlannerRoutes.OPENING_SPLIT) {
             val viewModel: OpeningSplitViewModel = hiltViewModel()
+            val openingGoals = definedGoalsForOpening.ifEmpty {
+                DemoData.sampleOpeningSplitGoals()
+            }
             OpeningSplitScreen(
                 viewModel = viewModel,
-                goals = demoGoals,
+                goals = openingGoals,
                 openingBalance = resolvedOpeningBalance,
                 onNavigateToGoals = {
                     navController.navigate(PiPlannerRoutes.GOALS_TAB) {
