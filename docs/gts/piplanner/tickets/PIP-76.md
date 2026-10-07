@@ -62,11 +62,11 @@ Compare device/emulator (or Compose previews) to design artifact:
 
 ## Parallel work / base
 
-Started from `33b810ba` (main after PIP-70 #20). Rebased onto `1fcbdff7` (main after PIP-74 #22 / PIP-72 #21). Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, components foundation, Welcome (PIP-74), Update/UPI (PIP-78).
+Started from `33b810ba` (main after PIP-70 #20). Previously rebased onto `1fcbdff7` (PIP-74). **Current tip:** rebased onto `1f3bb8fa` (main after PIP-94 Settings #25; also includes PIP-80 / PIP-88 / PIP-84). Keep-both on shared `strings.xml` (PIP-76 role labels + main goal-detail / sync / settings strings). Touches Accounts / Consent / FetchedBalance UI (+ nav flag + GTS doc). Avoids Theme/, components foundation, Welcome (PIP-74), Update/UPI (PIP-78).
 
 ## Test results
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** after rebase onto `1fcbdff7` (includes `AccountsConsentVisualTest` + existing behaviour suites).
+`./gradlew assembleDebug test` — pending retest after rebase onto `1f3bb8fa` (includes `AccountsConsentVisualTest` + existing behaviour suites).
 
 ## How to run tests
 
