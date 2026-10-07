@@ -45,9 +45,13 @@ Rebased onto `main@7830826` (PIP-46 Goals tab). Entry remains Goal detail Delete
 1. History label → `DeleteGoalService.historyTitle` / `history_type_deleted` = **"Deleted / moved"** (asserted in `DeleteGoalServiceTest`)
 2. Edit-once lock → Edit→Done pass with `hasEditedOnce`; equal default may confirm without editing (`DeleteGoalViewModelTest`)
 
+## GTS Review round 2 fix
+
+1. `finishEditPercents` requires 100% (iOS PIP-53 `finishEdit` parity) — reject Done when sum ≠ 100%, keep `isEditingPercents`, do not set `hasEditedOnce`; surface shortfall via `errorMessage` (`finishEditPercents_rejectsNonHundred_keepsEditing`)
+
 ## Test result
 
-`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-1 fixes + rebase onto `7830826`).
+`./gradlew assembleDebug test` — **BUILD SUCCESSFUL** (round-2 Done@100% gate).
 
 ## Assumptions
 

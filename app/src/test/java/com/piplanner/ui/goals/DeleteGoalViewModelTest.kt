@@ -120,6 +120,35 @@ class DeleteGoalViewModelTest {
     }
 
     @Test
+    fun finishEditPercents_rejectsNonHundred_keepsEditing() = runTest(dispatcher) {
+        seedThreeGoals()
+        viewModel.configure(DemoData.DEMO_CAR_GOAL_ID)
+        advanceUntilIdle()
+
+        viewModel.beginEditPercents()
+        viewModel.setDisplayPercent(DemoData.DEMO_EMERGENCY_GOAL_ID, 70)
+        viewModel.setDisplayPercent("cccccccc-cccc-cccc-cccc-cccccccccccc", 20)
+
+        viewModel.finishEditPercents()
+        val rejected = viewModel.uiState.value
+        assertThat(rejected.hasEditedOnce).isFalse()
+        assertThat(rejected.isEditingPercents).isTrue()
+        assertThat(rejected.canEditPercents).isTrue()
+        assertThat(rejected.canStartEdit).isFalse()
+        assertThat(rejected.canConfirm).isFalse()
+        assertThat(rejected.errorMessage).isEqualTo("Total 90%. Assign the remaining 10%.")
+
+        // Fix to 100% then Done locks
+        viewModel.setDisplayPercent("cccccccc-cccc-cccc-cccc-cccccccccccc", 30)
+        viewModel.finishEditPercents()
+        val locked = viewModel.uiState.value
+        assertThat(locked.hasEditedOnce).isTrue()
+        assertThat(locked.isEditingPercents).isFalse()
+        assertThat(locked.errorMessage).isNull()
+        assertThat(locked.canConfirm).isTrue()
+    }
+
+    @Test
     fun onlyGoal_confirmDisabledUntilReplacementCreated() = runTest(dispatcher) {
         seedOnlyGoal()
         viewModel.configure(DemoData.DEMO_CAR_GOAL_ID)

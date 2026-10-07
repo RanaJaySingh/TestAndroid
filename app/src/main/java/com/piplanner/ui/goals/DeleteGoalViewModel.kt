@@ -99,15 +99,31 @@ class DeleteGoalViewModel @Inject constructor(
         }
     }
 
-    /** Ends the edit pass and locks percents until Confirm. */
+    /**
+     * Ends the edit pass and locks percents until Confirm (iOS PIP-53 `finishEdit`).
+     * Rejects Done when percents do not sum to 100% — keeps editing, does not set [hasEditedOnce].
+     */
     fun finishEditPercents() {
         val state = _uiState.value
         if (!state.isEditingPercents) return
+        val fractions = orderedFractions(state.destinationGoals, state.displayPercents)
+        if (!openingSplitService.isValidHundredPercent(fractions)) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = openingSplitService.shortfallMessage(fractions)
+                        ?: "Reassignment must total 100%.",
+                    statusMessage = buildStatusMessage(it.destinationGoals, it.displayPercents),
+                    canConfirm = false,
+                )
+            }
+            return
+        }
         _uiState.update {
             it.copy(
                 isEditingPercents = false,
                 hasEditedOnce = true,
                 phase = DeleteGoalPhase.ReassignEdit,
+                errorMessage = null,
                 canConfirm = canConfirm(
                     destinations = it.destinationGoals,
                     displayPercents = it.displayPercents,
