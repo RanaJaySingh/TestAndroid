@@ -113,6 +113,7 @@ class GoalsViewModel @Inject constructor(
                         withdrawalNewBalancePaisa = null,
                         formattedFetchedBalance = null,
                         formattedNewCreditAmount = null,
+                        formattedWentDownBy = null,
                     )
                 }
             GoalsBalanceAction.UpdateBalance ->
@@ -125,6 +126,7 @@ class GoalsViewModel @Inject constructor(
                         withdrawalShortfallPaisa = null,
                         withdrawalPreviousBalancePaisa = null,
                         withdrawalNewBalancePaisa = null,
+                        formattedWentDownBy = null,
                     )
                 }
         }
@@ -174,6 +176,8 @@ class GoalsViewModel @Inject constructor(
                     withdrawalPreviousBalancePaisa = null,
                     withdrawalNewBalancePaisa = null,
                     formattedPreviousBalance = formattingService.formatInrFromPaisa(dedicated.balance),
+                    formattedNewCreditAmount = null,
+                    formattedWentDownBy = null,
                 )
             }
 
@@ -221,6 +225,57 @@ class GoalsViewModel @Inject constructor(
                 isTyped = true,
                 previousBalance = dedicated.balance,
                 forUpdateSheet = true,
+            )
+        }
+    }
+
+    /**
+     * Frame 11a "Balance sync" choice — fetch dedicated balance into the Update sheet
+     * (same [processBalanceOutcome] path as manual apply; no new product rules).
+     */
+    fun performUpdateBalanceSync() {
+        viewModelScope.launch {
+            if (_uiState.value.isSyncOrUpdateBlocked) {
+                _uiState.update {
+                    it.copy(updateInfoMessage = CreditEntryService.ASSIGN_OPEN_BEFORE_UPDATE)
+                }
+                return@launch
+            }
+            val dedicated = dedicatedAccountService.dedicatedAccount(_uiState.value.accounts)
+            if (dedicated == null) {
+                _uiState.update {
+                    it.copy(updateErrorMessage = "No dedicated savings account.")
+                }
+                return@launch
+            }
+            _uiState.update {
+                it.copy(
+                    updateInfoMessage = null,
+                    updateErrorMessage = null,
+                    createdCreditEntryId = null,
+                    withdrawalShortfallPaisa = null,
+                    withdrawalPreviousBalancePaisa = null,
+                    withdrawalNewBalancePaisa = null,
+                    formattedPreviousBalance = formattingService.formatInrFromPaisa(dedicated.balance),
+                    formattedWentDownBy = null,
+                )
+            }
+            val result = balanceSync.fetchBalance(dedicated.id)
+            result.fold(
+                onSuccess = { paisa ->
+                    processBalanceOutcome(
+                        fetchedBalance = paisa,
+                        dedicatedAccountId = dedicated.id,
+                        isTyped = false,
+                        previousBalance = dedicated.balance,
+                        forUpdateSheet = true,
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.update {
+                        it.copy(updateErrorMessage = error.message ?: error.toString())
+                    }
+                },
             )
         }
     }
@@ -357,6 +412,7 @@ class GoalsViewModel @Inject constructor(
                                 withdrawalShortfallPaisa = null,
                                 withdrawalPreviousBalancePaisa = null,
                                 withdrawalNewBalancePaisa = null,
+                                formattedWentDownBy = null,
                             )
                         }
                     } else {
@@ -367,6 +423,7 @@ class GoalsViewModel @Inject constructor(
                                 syncInfoMessage = outcome.message,
                                 formattedFetchedBalance = formattedFetched,
                                 formattedNewCreditAmount = null,
+                                formattedWentDownBy = null,
                                 createdCreditEntryId = null,
                                 withdrawalShortfallPaisa = null,
                                 withdrawalPreviousBalancePaisa = null,
@@ -376,9 +433,10 @@ class GoalsViewModel @Inject constructor(
                     }
                 }
                 is CreditProcessOutcome.WithdrawalRequired -> {
-                    val message = "Balance went down by ${
-                        formattingService.formatInrFromPaisa(outcome.shortfall)
-                    }."
+                    val shortfallFormatted = formattingService.formatInrFromPaisa(outcome.shortfall)
+                    val message = "Balance went down by $shortfallFormatted."
+                    // Design frame 10b: negative INR for the amount row (−₹…).
+                    val wentDownBy = "-$shortfallFormatted".replace("--", "-")
                     if (forUpdateSheet) {
                         _uiState.update {
                             it.copy(
@@ -388,6 +446,7 @@ class GoalsViewModel @Inject constructor(
                                 withdrawalPreviousBalancePaisa = outcome.previousBalance,
                                 withdrawalNewBalancePaisa = outcome.newBalance,
                                 createdCreditEntryId = null,
+                                formattedWentDownBy = wentDownBy,
                             )
                         }
                     } else {
@@ -398,6 +457,7 @@ class GoalsViewModel @Inject constructor(
                                 syncInfoMessage = message,
                                 formattedFetchedBalance = formattedFetched,
                                 formattedNewCreditAmount = null,
+                                formattedWentDownBy = wentDownBy,
                                 withdrawalShortfallPaisa = outcome.shortfall,
                                 withdrawalPreviousBalancePaisa = outcome.previousBalance,
                                 withdrawalNewBalancePaisa = outcome.newBalance,
@@ -418,6 +478,7 @@ class GoalsViewModel @Inject constructor(
                                 withdrawalShortfallPaisa = null,
                                 withdrawalPreviousBalancePaisa = null,
                                 withdrawalNewBalancePaisa = null,
+                                formattedWentDownBy = null,
                             )
                         }
                     } else {
@@ -428,6 +489,7 @@ class GoalsViewModel @Inject constructor(
                                 syncInfoMessage = null,
                                 formattedFetchedBalance = formattedFetched,
                                 formattedNewCreditAmount = formattedNew,
+                                formattedWentDownBy = null,
                                 createdCreditEntryId = outcome.entry.id,
                                 withdrawalShortfallPaisa = null,
                                 withdrawalPreviousBalancePaisa = null,
@@ -522,6 +584,8 @@ data class GoalsUiState(
     val formattedPreviousBalance: String = "₹0",
     val formattedFetchedBalance: String? = null,
     val formattedNewCreditAmount: String? = null,
+    /** Frame 10b — "Went down by −₹…" presentation (null when not lower). */
+    val formattedWentDownBy: String? = null,
     val createdCreditEntryId: String? = null,
     val openCreditEntryId: String? = null,
     val openEntryBannerMessage: String? = null,
